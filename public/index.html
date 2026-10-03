@@ -155,7 +155,8 @@ th{background:var(--papier);font-weight:600}
      <div><label for="bArt">Art des Einsatzes</label>
       <select id="bArt"><option>Brand</option><option>Technischer Einsatz</option><option>Verkehrsunfall</option><option>Brandmeldealarm</option><option>Sonstiges</option></select></div>
      <div><label for="bOrt">Einsatzort</label><input id="bOrt" required maxlength="100"></div>
-     <div><label for="bDatum">Datum und Uhrzeit</label><input id="bDatum" type="datetime-local" required></div>
+     <div><label for="bDatum">Einsatzbeginn</label><input id="bDatum" type="datetime-local" required></div>
+     <div><label for="bEnde">Einsatzende</label><input id="bEnde" type="datetime-local" required></div>
     </div>
     <label for="bText">Ablauf des Einsatzes</label>
     <textarea id="bText" rows="5" required maxlength="3000"></textarea>
@@ -248,6 +249,12 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = s => s ? new Date(s).toLocaleString("de-AT",{dateStyle:"medium",timeStyle:"short"}) : "";
 const zuMail = n => { n = n.trim(); return n.includes("@") ? n : n.toLowerCase().replace(/\s+/g,"") + "@ff-wien.portal"; };
+const dauer = (a,b) => {
+  const min = Math.round((new Date(b) - new Date(a)) / 60000);
+  if(!(min >= 0)) return "";
+  const h = Math.floor(min/60), m = min % 60;
+  return h ? `${h} Std. ${m} Min.` : `${m} Min.`;
+};
 const fmtTs = t => t && t.toDate ? t.toDate().toLocaleDateString("de-AT",{dateStyle:"medium"}) : "gerade eben";
 
 let me = null, reports = [], promos = [], users = [], rollen = [], view = "start";
@@ -346,7 +353,7 @@ $("#nav").onclick = e => {
 function berichtKarte(r){
   return `<article class="bericht"><div class="kopf"><h3>${esc(r.title)}</h3>
     ${istAdmin()?`<button class="btn gefahr klein" data-act="loeschen" data-id="${r.id}" type="button">Löschen</button>`:""}</div>
-    <div class="meta"><span class="tag">${esc(r.type)}</span>${esc(r.location)} · ${fmt(r.date)} · ${esc(r.authorName)}</div>
+    <div class="meta"><span class="tag">${esc(r.type)}</span>${esc(r.location)} · ${fmt(r.date)}${r.endDate?` bis ${fmt(r.endDate)} (${dauer(r.date,r.endDate)})`:""} · ${esc(r.authorName)}</div>
     <p>${esc(r.narrative)}</p></article>`;
 }
 
@@ -419,10 +426,11 @@ $("#pUser").onchange = () => {
 /* ---------- Formulare ---------- */
 $("#bForm").onsubmit = async e => {
   e.preventDefault(); $("#bMsg").textContent = "";
+  if($("#bEnde").value < $("#bDatum").value){$("#bMsg").textContent = "Das Einsatzende darf nicht vor dem Einsatzbeginn liegen.";return}
   try{
     await addDoc(collection(db,"reports"),{
       title:$("#bTitel").value.trim(), type:$("#bArt").value, location:$("#bOrt").value.trim(),
-      date:$("#bDatum").value, narrative:$("#bText").value.trim(),
+      date:$("#bDatum").value, endDate:$("#bEnde").value, narrative:$("#bText").value.trim(),
       authorUid:me.id, authorName:me.name, createdAt:serverTimestamp()
     });
     e.target.reset(); toast("Bericht gespeichert");
