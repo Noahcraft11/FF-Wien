@@ -118,6 +118,10 @@ tbody tr:last-child td{border-bottom:0}
  .ich-btns{margin:0}
  .zeile2{grid-template-columns:1fr}
 }
+.bal{display:grid;grid-template-columns:minmax(90px,1fr) 3fr auto;gap:.6rem;align-items:center;margin:.35rem 0;font-size:.9rem}
+.bal div{background:var(--surface-2);border-radius:3px}
+.bal i{display:block;height:12px;border-radius:3px;background:var(--rot)}
+details.bericht summary{cursor:pointer;font:600 1.3rem var(--kopf)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -159,11 +163,16 @@ tbody tr:last-child td{border-bottom:0}
   <div class="marke"><b>Feuerwehr Wien</b><span>Mitgliederportal</span></div>
   <nav id="nav">
    <button data-view="start" class="aktiv">Übersicht</button>
+   <button data-view="ankuendigungen">Ankündigungen</button>
+   <button data-view="termine">Termine</button>
+   <button data-view="abmeldungen">Abmeldungen</button>
    <button data-view="berichte">Einsatzberichte</button>
    <button data-view="befoerderungen">Beförderungen</button>
    <button data-view="arbeitsunfaelle">Arbeitsunfälle</button>
    <button data-view="lehrgaenge">Lehrgänge</button>
    <button data-view="verwarnungen">Verwarnungen</button>
+   <button data-view="statistik">Statistik</button>
+   <button data-view="dokumente">Dokumente</button>
    <button data-view="telefonbuch">Telefonbuch</button>
    <button data-view="profil">Mein Profil</button>
    <button data-view="verwaltung" id="navAdmin" class="hidden">Verwaltung</button>
@@ -179,6 +188,8 @@ tbody tr:last-child td{border-bottom:0}
   <section id="v-start">
    <header><h2>Übersicht</h2><p>Aktueller Stand der Feuerwehr.</p></header>
    <div class="zahlen" id="zahlen"></div>
+   <h3 style="margin-bottom:.7rem">Ankündigungen</h3>
+   <div id="anStart" style="margin-bottom:1.5rem"></div>
    <h3 style="margin-bottom:.7rem" id="letzteKopf">Letzte Einsatzberichte</h3>
    <div id="letzte"></div>
   </section>
@@ -306,6 +317,82 @@ tbody tr:last-child td{border-bottom:0}
    <div id="wListe"></div>
   </section>
 
+  <!-- Ankündigungen -->
+  <section id="v-ankuendigungen" class="hidden">
+   <header><h2>Ankündigungen</h2><p>Neuigkeiten und Mitteilungen der Führung.</p></header>
+   <form class="panel hidden" id="anForm">
+    <h3>Neue Ankündigung</h3>
+    <label for="anTitel">Titel</label><input id="anTitel" required maxlength="100">
+    <label for="anText">Text</label><textarea id="anText" rows="4" required maxlength="2000"></textarea>
+    <label style="display:flex;align-items:center;gap:.45rem;font-weight:500"><input type="checkbox" id="anWichtig" style="width:auto"> Als wichtig markieren</label>
+    <div class="msg" id="anMsg" role="alert"></div>
+    <button class="btn" type="submit">Veröffentlichen</button>
+   </form>
+   <div id="anListe"></div>
+  </section>
+
+  <!-- Termine und Übungen -->
+  <section id="v-termine" class="hidden">
+   <header><h2>Termine und Übungen</h2><p>Dienstabende, Übungen und andere Termine.</p></header>
+   <form class="panel hidden" id="tmForm">
+    <h3>Neuer Termin</h3>
+    <div class="zeile2">
+     <div><label for="tmTitel">Titel</label><input id="tmTitel" required maxlength="100"></div>
+     <div><label for="tmArt">Art</label><select id="tmArt"><option>Übung</option><option>Dienstabend</option><option>Besprechung</option><option>Sonstiges</option></select></div>
+     <div><label for="tmStart">Beginn</label><input id="tmStart" type="datetime-local" required></div>
+     <div><label for="tmOrt">Ort</label><input id="tmOrt" maxlength="100" placeholder="optional"></div>
+    </div>
+    <label for="tmText">Beschreibung</label><textarea id="tmText" rows="3" maxlength="1000" placeholder="optional"></textarea>
+    <div class="msg" id="tmMsg" role="alert"></div>
+    <button class="btn" type="submit">Termin anlegen</button>
+   </form>
+   <h3 style="margin-bottom:.6rem">Anstehend</h3><div id="tmKommend"></div>
+   <h3 style="margin:1.5rem 0 .6rem">Vergangen</h3><div id="tmVorbei"></div>
+  </section>
+
+  <!-- Abmeldungen -->
+  <section id="v-abmeldungen" class="hidden">
+   <header><h2>Abmeldungen</h2><p id="abSub"></p></header>
+   <form class="panel" id="abForm">
+    <h3>Neue Abmeldung</h3>
+    <div class="zeile2">
+     <div><label for="abTermin">Termin</label><select id="abTermin"></select></div><div></div>
+     <div><label for="abVon">Von</label><input id="abVon" type="date" required></div>
+     <div><label for="abBis">Bis</label><input id="abBis" type="date" required></div>
+    </div>
+    <label for="abGrund">Grund</label><input id="abGrund" required maxlength="200">
+    <div class="msg" id="abMsg" role="alert"></div>
+    <button class="btn" type="submit">Abmelden</button>
+   </form>
+   <div id="abListe"></div>
+  </section>
+
+  <!-- Statistik -->
+  <section id="v-statistik" class="hidden">
+   <header><h2>Statistik</h2><p>Einsätze und Mitglieder im Überblick.</p></header>
+   <div class="zahlen" id="stZahlen"></div>
+   <div class="zeile2"><div class="panel"><h3>Einsätze nach Art</h3><div id="stArt"></div></div><div class="panel"><h3>Einsätze pro Monat</h3><div id="stMonat"></div></div></div>
+   <div class="panel"><h3>Meiste Einsatzteilnahmen</h3><div id="stTop"></div></div>
+  </section>
+
+  <!-- Dokumente und Regelwerk -->
+  <section id="v-dokumente" class="hidden">
+   <header><h2>Dokumente und Regelwerk</h2><p>Dienstanweisungen, Funkcodes und Einsatzabläufe zum Nachlesen.</p></header>
+   <form class="panel hidden" id="dkForm">
+    <h3>Neues Dokument</h3>
+    <div class="zeile2">
+     <div><label for="dkTitel">Titel</label><input id="dkTitel" required maxlength="100"></div>
+     <div><label for="dkKat">Kategorie</label><select id="dkKat"><option>Dienstanweisung</option><option>Funkcode</option><option>Einsatzablauf</option><option>Sonstiges</option></select></div>
+    </div>
+    <label for="dkText">Inhalt</label><textarea id="dkText" rows="8" required maxlength="20000"></textarea>
+    <div class="msg" id="dkMsg" role="alert"></div>
+    <button class="btn" type="submit">Dokument speichern</button>
+   </form>
+   <label for="dkSuche" style="margin-top:0">Dokumente durchsuchen</label>
+   <input id="dkSuche" type="search" placeholder="Titel, Kategorie oder Inhalt" style="margin-bottom:1rem">
+   <div id="dkListe"></div>
+  </section>
+
   <!-- Telefonbuch -->
   <section id="v-telefonbuch" class="hidden">
    <header><h2>Telefonbuch</h2><p>Erreichbarkeit aller aktiven Mitglieder.</p></header>
@@ -389,7 +476,7 @@ tbody tr:last-child td{border-bottom:0}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,updatePassword,reauthenticateWithCredential,EmailAuthProvider} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc,addDoc,deleteDoc,updateDoc,collection,query,orderBy,limit,where,onSnapshot,writeBatch,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,getDoc,setDoc,addDoc,deleteDoc,updateDoc,collection,query,orderBy,limit,where,onSnapshot,writeBatch,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // 1) Trag hier die Werte aus der Firebase-Konsole ein (Projekteinstellungen → Web-App)
 const firebaseConfig = {
@@ -436,7 +523,7 @@ const dauer = (a,b) => {
 const fmtDatum = s => s ? new Date(s).toLocaleDateString("de-AT",{dateStyle:"medium"}) : "";
 const fmtTs = t => t && t.toDate ? t.toDate().toLocaleDateString("de-AT",{dateStyle:"medium"}) : "gerade eben";
 
-let me = null, reports = [], promos = [], accidents = [], courses = [], awards = [], warnings = [], users = [], rollen = [], view = "start", profilId = null;
+let me = null, reports = [], promos = [], accidents = [], courses = [], awards = [], warnings = [], users = [], rollen = [], ankuend = [], termine = [], abm = [], dokus = [], view = "start", profilId = null;
 const alleRollen = () => [{name:"Mitglied",admin:false,canWarn:false},{name:"Admin",admin:true,canWarn:true},...rollen];
 let userUnsub = null, dataUnsubs = [], dataSig = "";
 
@@ -484,6 +571,8 @@ document.addEventListener("click", async e => {
     if(act==="mitglied-loeschen" && confirm("Dieses Konto löschen? Die Person kann sich danach nicht mehr einloggen.")){await deleteDoc(doc(db,"users",id)); toast("Konto gelöscht")}
     if(act==="rolle-loeschen" && confirm("Rolle entfernen? Bereits vergebene Rollen bleiben bei den Mitgliedern stehen.")){await deleteDoc(doc(db,"roles",id)); toast("Rolle entfernt")}
     if(act==="unfall-loeschen" && confirm("Diesen Arbeitsunfall endgültig löschen?")){await deleteDoc(doc(db,"accidents",id)); toast("Arbeitsunfall gelöscht")}
+    const DEL = {"an-loeschen":["announcements","Ankündigung"],"tm-loeschen":["events","Termin"],"ab-loeschen":["absences","Abmeldung"],"dk-loeschen":["docs","Dokument"]};
+    if(DEL[act] && confirm(`${DEL[act][1]} endgültig löschen?`)){await deleteDoc(doc(db,DEL[act][0],id)); toast(DEL[act][1]+" gelöscht")}
     if(act==="loeschen" && confirm("Diesen Bericht endgültig löschen?")){await deleteDoc(doc(db,"reports",id)); toast("Bericht gelöscht")}
   }catch(err){toast(fehlertext(err))}
 });
@@ -520,7 +609,7 @@ onAuthStateChanged(auth, user => {
 
 function startData(){
   // Nur Daten abonnieren, die das Mitglied sehen darf; bei geänderten Rechten neu starten.
-  const sig = BEREICHE.map(b => darf(b.key)).join() + "|" + darfVerwarnen();
+  const sig = BEREICHE.map(b => darf(b.key)).join() + "|" + darfVerwarnen() + "|" + istAdmin();
   if(dataUnsubs.length && sig === dataSig) return;
   stopData(); dataSig = sig;
   const f = err => toast(fehlertext(err));
@@ -540,9 +629,14 @@ function startData(){
     renderAll();
   }, f));
   if(darf("accidents")) dataUnsubs.push(onSnapshot(query(collection(db,"accidents"),orderBy("date","desc"),limit(100)), s => {accidents=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f));
+  const lade = (q,set) => dataUnsubs.push(onSnapshot(q, s => {set(s.docs.map(d=>({id:d.id,...d.data()})));renderAll()}, f));
+  lade(query(collection(db,"announcements"),orderBy("createdAt","desc"),limit(50)), v => ankuend=v);
+  lade(query(collection(db,"events"),orderBy("start","desc"),limit(200)), v => termine=v);
+  lade(query(collection(db,"docs"),orderBy("title")), v => dokus=v);
+  lade(istAdmin() ? query(collection(db,"absences"),orderBy("createdAt","desc"),limit(300)) : query(collection(db,"absences"),where("userUid","==",me.id)), v => abm=v.sort((a,b)=>(b.from||"").localeCompare(a.from||"")));
   if(darf("promotions")) dataUnsubs.push(onSnapshot(query(collection(db,"promotions"),orderBy("createdAt","desc"),limit(100)), s => {promos=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f));
 }
-function stopData(){dataUnsubs.forEach(u=>u());dataUnsubs=[];dataSig="";reports=[];promos=[];accidents=[];courses=[];awards=[];warnings=[];users=[];rollen=[]}
+function stopData(){dataUnsubs.forEach(u=>u());dataUnsubs=[];dataSig="";reports=[];promos=[];accidents=[];courses=[];awards=[];warnings=[];users=[];rollen=[];ankuend=[];termine=[];abm=[];dokus=[]}
 const istAdmin = () => me && me.role === "admin";
 // Admins sehen alles. Sonst zählt permissions[key]; fehlt der Eintrag, ist der Bereich erlaubt.
 const darf = key => !!me && (me.role === "admin" || !me.permissions || me.permissions[key] !== false);
@@ -557,7 +651,7 @@ $("#nav").onclick = e => {
 
 /* ---------- Anzeige ---------- */
 function berichtKarte(r){
-  return `<article class="bericht"><div class="kopf"><h3>${esc(r.title)}</h3>
+  return `<article class="bericht"><div class="kopf"><h3>${r.number?`<span class="tag">${esc(r.number)}</span> `:""}${esc(r.title)}</h3>
     ${istAdmin()?`<button class="btn gefahr klein" data-act="loeschen" data-id="${r.id}" type="button">Löschen</button>`:""}</div>
     <div class="meta"><span class="tag">${esc(r.type)}</span>${esc(r.location)} · ${fmt(r.date)}${r.endDate?` bis ${fmt(r.endDate)} (${dauer(r.date,r.endDate)})`:""} · ${esc(r.authorName)}</div>
     <p>${esc(r.narrative)}</p>${r.crew&&r.crew.length?`<p style="margin-top:.5rem"><b>Beteiligt:</b> ${r.crew.map(c => esc(c.name)).join(", ")}</p>`:""}</article>`;
@@ -589,9 +683,11 @@ function renderAll(){
   if(view==="verwaltung" && !istAdmin()) view = "start";
   const sperre = BEREICHE.find(b => b.view===view && !darf(b.key));
   if(sperre) view = "start";
+  if(view==="statistik" && !darf("reports")) view = "start";
+  document.querySelector('#nav [data-view="statistik"]').classList.toggle("hidden",!darf("reports"));
   if(view==="profil" && !(users.find(u => u.id===profilId) || (profilId===me.id ? me : null))) view = "start";
   document.querySelectorAll("#nav [data-view]").forEach(b => b.classList.toggle("aktiv",b.dataset.view===view && (view!=="profil" || profilId===me.id)));
-  ["start","berichte","befoerderungen","arbeitsunfaelle","lehrgaenge","verwarnungen","telefonbuch","profil","verwaltung"].forEach(v => $("#v-"+v).classList.toggle("hidden",v!==view));
+  ["start","ankuendigungen","termine","abmeldungen","statistik","dokumente","berichte","befoerderungen","arbeitsunfaelle","lehrgaenge","verwarnungen","telefonbuch","profil","verwaltung"].forEach(v => $("#v-"+v).classList.toggle("hidden",v!==view));
 
   // Übersicht
   const monat = new Date().toISOString().slice(0,7);
@@ -613,7 +709,7 @@ function renderAll(){
     crewBox.querySelectorAll("input").forEach(i => i.checked = gewaehlt.has(i.value));
   }
   const q = $("#bSuche").value.trim().toLowerCase();
-  const treffer = reports.filter(r => !q || [r.title,r.location,r.type,r.authorName,...(r.crew||[]).map(c => c.name)].join(" ").toLowerCase().includes(q));
+  const treffer = reports.filter(r => !q || [r.number,r.title,r.location,r.type,r.authorName,...(r.crew||[]).map(c => c.name)].join(" ").toLowerCase().includes(q));
   $("#bListe").innerHTML = treffer.map(berichtKarte).join("") || `<div class="leer">${q?"Kein Bericht passt zu deiner Suche.":"Noch keine Einsatzberichte."}</div>`;
 
   // Arbeitsunfälle
@@ -716,8 +812,63 @@ function renderAll(){
         <button class="btn gefahr klein" data-act="mitglied-loeschen" data-id="${u.id}" type="button">Löschen</button>`}</td></tr>`;
     }).join("");
   }
+  renderNeu();
 }
 
+function renderNeu(){
+  const adm = istAdmin(), jetzt = new Date().toISOString().slice(0,16);
+  const loeschen = (act,id) => adm ? `<button class="btn gefahr klein" data-act="${act}" data-id="${id}" type="button">Löschen</button>` : "";
+  ["#anForm","#tmForm","#dkForm"].forEach(x => $(x).classList.toggle("hidden",!adm));
+
+  // Ankündigungen
+  const anKarte = a => `<article class="bericht"><div class="kopf"><h3>${esc(a.title)}</h3>${loeschen("an-loeschen",a.id)}</div><div class="meta">${a.important?`<span class="tag schwer">Wichtig</span>`:""}${esc(a.authorName)} · ${fmtTs(a.createdAt)}</div><p>${esc(a.text)}</p></article>`;
+  $("#anListe").innerHTML = ankuend.map(anKarte).join("") || `<div class="leer">Noch keine Ankündigungen.</div>`;
+  $("#anStart").innerHTML = ankuend.slice(0,2).map(anKarte).join("") || `<div class="leer">Keine Ankündigungen.</div>`;
+
+  // Termine
+  const kommend = termine.filter(t => t.start >= jetzt).sort((a,b) => a.start.localeCompare(b.start));
+  const tmKarte = t => { const ab = abm.filter(a => a.eventId===t.id);
+    return `<article class="bericht"><div class="kopf"><h3>${esc(t.title)}</h3>${loeschen("tm-loeschen",t.id)}</div>
+    <div class="meta"><span class="tag">${esc(t.type)}</span>${fmt(t.start)}${t.location?` · ${esc(t.location)}`:""}</div>
+    ${t.description?`<p>${esc(t.description)}</p>`:""}
+    ${adm ? (ab.length ? `<p><b>Abgemeldet:</b> ${ab.map(a => esc(a.userName)).join(", ")}</p>` : "") : (ab.length ? `<span class="tag mittel">Du bist abgemeldet</span>` : "")}</article>`; };
+  $("#tmKommend").innerHTML = kommend.map(tmKarte).join("") || `<div class="leer">Keine anstehenden Termine.</div>`;
+  $("#tmVorbei").innerHTML = termine.filter(t => t.start < jetzt).slice(0,20).map(tmKarte).join("") || `<div class="leer">Noch keine vergangenen Termine.</div>`;
+
+  // Abmeldungen
+  $("#abSub").textContent = adm ? "Alle Abmeldungen der Mitglieder." : "Melde dich für Termine oder Zeiträume ab.";
+  const st = $("#abTermin"), alt = st.value;
+  st.innerHTML = `<option value="">Allgemein (nur Zeitraum)</option>` + kommend.map(t => `<option value="${t.id}">${esc(t.title)} · ${fmt(t.start)}</option>`).join("");
+  st.value = alt;
+  $("#abListe").innerHTML = abm.map(a => `<article class="bericht"><div class="kopf"><h3>${adm ? esc(a.userName) : esc(a.eventTitle || "Allgemeine Abmeldung")}</h3><button class="btn gefahr klein" data-act="ab-loeschen" data-id="${a.id}" type="button">${adm ? "Löschen" : "Zurückziehen"}</button></div>
+    <div class="meta">${adm && a.eventTitle ? `<span class="tag">${esc(a.eventTitle)}</span>` : ""}${fmtDatum(a.from)}${a.to!==a.from ? ` bis ${fmtDatum(a.to)}` : ""}</div><p>${esc(a.reason)}</p></article>`).join("") || `<div class="leer">Keine Abmeldungen.</div>`;
+
+  // Dokumente
+  const qd = $("#dkSuche").value.trim().toLowerCase(), offen = new Set([...document.querySelectorAll("#dkListe details[open]")].map(x => x.dataset.id));
+  $("#dkListe").innerHTML = ["Dienstanweisung","Funkcode","Einsatzablauf","Sonstiges"].map(k => {
+    const l = dokus.filter(d => (d.category||"Sonstiges")===k && (!qd || [d.title,d.category,d.text].join(" ").toLowerCase().includes(qd)));
+    return l.length ? `<h3 style="margin:1rem 0 .6rem">${k}</h3>` + l.map(d => `<details class="bericht" data-id="${d.id}"${qd || offen.has(d.id) ? " open" : ""}><summary>${esc(d.title)}</summary><p style="margin-top:.6rem">${esc(d.text)}</p>${adm ? `<div style="margin-top:.5rem">${loeschen("dk-loeschen",d.id)}</div>` : ""}</details>`).join("") : "";
+  }).join("") || `<div class="leer">${qd ? "Kein Dokument passt zu deiner Suche." : "Noch keine Dokumente."}</div>`;
+
+  // Statistik
+  if(view==="statistik"){
+    const bal = l => { const m = Math.max(1,...l.map(x => x[1])); return l.map(x => `<div class="bal"><span>${esc(x[0])}</span><div><i style="width:${Math.round(x[1]/m*100)}%"></i></div><b>${x[1]}</b></div>`).join("") || "<small>Keine Daten.</small>"; };
+    const jahr = String(new Date().getFullYear());
+    const dauern = reports.map(r => (new Date(r.endDate) - new Date(r.date)) / 60000).filter(x => x >= 0);
+    const avg = dauern.length ? Math.round(dauern.reduce((a,b) => a+b, 0) / dauern.length) : 0;
+    const z = [[reports.length,"Einsätze gesamt"],[reports.filter(r => (r.date||"").startsWith(jahr)).length,"Einsätze "+jahr],[avg ? `${Math.floor(avg/60)}h ${avg%60}m` : "–","Ø Einsatzdauer"]];
+    if(darf("accidents")) z.push([accidents.length,"Arbeitsunfälle"]);
+    $("#stZahlen").innerHTML = z.map(x => `<div class="zahl"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
+    const arten = {}; reports.forEach(r => { const k = r.type || "Sonstiges"; arten[k] = (arten[k]||0) + 1; });
+    $("#stArt").innerHTML = bal(Object.entries(arten).sort((a,b) => b[1]-a[1]));
+    const y = new Date().getFullYear(), m0 = new Date().getMonth(), monate = [];
+    for(let i=11;i>=0;i--){ const d = new Date(y,m0-i,1); monate.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")); }
+    $("#stMonat").innerHTML = bal(monate.map(m => [m.slice(5)+"/"+m.slice(2,4), reports.filter(r => (r.date||"").startsWith(m)).length]));
+    $("#stTop").innerHTML = bal(users.filter(u => u.active).map(u => [u.name, reports.filter(r => (r.crew||[]).some(c => c.uid===u.id)).length]).filter(x => x[1]).sort((a,b) => b[1]-a[1]).slice(0,10));
+  }
+}
+
+$("#dkSuche").oninput = renderAll;
 $("#bSuche").oninput = renderAll;
 $("#aSuche").oninput = renderAll;
 $("#pUser").onchange = () => {
@@ -733,10 +884,15 @@ $("#bForm").onsubmit = async e => {
   const crew = [...document.querySelectorAll("#bCrew input:checked")].map(i => ({uid:i.value, name:(users.find(x => x.id===i.value)||{}).name || ""}));
   if(!crew.length){$("#bMsg").textContent = "Bitte mindestens ein beteiligtes Mitglied auswählen.";return}
   try{
-    await addDoc(collection(db,"reports"),{
-      title:$("#bTitel").value.trim(), type:$("#bArt").value, location:$("#bOrt").value.trim(),
+    const jahr = $("#bDatum").value.slice(0,4), rRef = doc(collection(db,"reports")), cRef = doc(db,"counters","reports-"+jahr);
+    await runTransaction(db, async t => {
+    const n = ((await t.get(cRef)).data()?.n || 0) + 1;
+    t.set(cRef,{n});
+    t.set(rRef,{
+      number:`E-${jahr}-${String(n).padStart(4,"0")}`, title:$("#bTitel").value.trim(), type:$("#bArt").value, location:$("#bOrt").value.trim(),
       date:$("#bDatum").value, endDate:$("#bEnde").value, crew, narrative:$("#bText").value.trim(),
       authorUid:me.id, authorName:me.name, createdAt:serverTimestamp()
+    });
     });
     e.target.reset(); toast("Bericht gespeichert");
   }catch(err){$("#bMsg").textContent = fehlertext(err)}
@@ -845,6 +1001,27 @@ $("#pForm").onsubmit = async e => {
     $("#pGrund").value = ""; toast("Rang geändert");
   }catch(err){$("#pMsg").textContent = fehlertext(err)}
 };
+
+function formular(id,msg,col,daten,ok){
+  $(id).onsubmit = async e => {
+    e.preventDefault(); $(msg).textContent = "";
+    try{
+      const d = daten(); if(!d) return;
+      await addDoc(collection(db,col),{...d,authorUid:me.id,authorName:me.name,createdAt:serverTimestamp()});
+      e.target.reset(); toast(ok);
+    }catch(err){$(msg).textContent = fehlertext(err)}
+  };
+}
+formular("#anForm","#anMsg","announcements",() => ({title:$("#anTitel").value.trim(),text:$("#anText").value.trim(),important:$("#anWichtig").checked}),"Ankündigung veröffentlicht");
+formular("#tmForm","#tmMsg","events",() => ({title:$("#tmTitel").value.trim(),type:$("#tmArt").value,start:$("#tmStart").value,location:$("#tmOrt").value.trim(),description:$("#tmText").value.trim()}),"Termin angelegt");
+formular("#dkForm","#dkMsg","docs",() => ({title:$("#dkTitel").value.trim(),category:$("#dkKat").value,text:$("#dkText").value.trim()}),"Dokument gespeichert");
+formular("#abForm","#abMsg","absences",() => {
+  const v = $("#abVon").value, b = $("#abBis").value;
+  if(b < v){$("#abMsg").textContent = "Das Ende darf nicht vor dem Beginn liegen."; return null}
+  const t = termine.find(x => x.id===$("#abTermin").value);
+  return {userUid:me.id,userName:me.name,eventId:t?t.id:"",eventTitle:t?t.title:"",from:v,to:b,reason:$("#abGrund").value.trim()};
+},"Abmeldung gespeichert");
+$("#abTermin").onchange = () => { const t = termine.find(x => x.id===$("#abTermin").value); if(t) $("#abVon").value = $("#abBis").value = t.start.slice(0,10); };
 </script>
 </body>
 </html>
