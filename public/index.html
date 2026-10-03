@@ -439,7 +439,7 @@ details.bericht summary{cursor:pointer;font:600 1.3rem var(--kopf)}
 
   <!-- Verwaltung -->
   <section id="v-verwaltung" class="hidden">
-   <header><h2>Verwaltung</h2><p>Konten anlegen, sperren, Rollen vergeben und Bereiche pro Mitglied festlegen.</p></header>
+   <header><h2>Verwaltung</h2><p>Konten anlegen, sperren, Rollen vergeben sowie Bereiche und Rechte pro Mitglied festlegen.</p></header>
    <form class="panel" id="nForm">
     <h3>Neues Mitglied anlegen</h3>
     <div class="zeile2">
@@ -465,7 +465,7 @@ details.bericht summary{cursor:pointer;font:600 1.3rem var(--kopf)}
     <div id="rListe" style="margin-top:1rem"></div>
    </form>
    <div class="tabelle"><table>
-    <thead><tr><th>Name</th><th>Dienstnr.</th><th>Rang</th><th>Rolle</th><th>Zugang</th><th>Sichtbare Bereiche</th><th></th></tr></thead>
+    <thead><tr><th>Name</th><th>Dienstnr.</th><th>Rang</th><th>Rolle</th><th>Zugang</th><th>Sichtbare Bereiche</th><th>Rechte</th><th></th></tr></thead>
     <tbody id="uTab"></tbody>
    </table></div>
   </section>
@@ -536,6 +536,17 @@ const BEREICHE = [
   {key:"courses",     view:"lehrgaenge",      label:"Lehrgänge"}
 ];
 
+// Einzelrechte, die ein Admin pro Mitglied vergeben kann (users/{uid}.rights.<key>; "warn" liegt auf users/{uid}.canWarn).
+// def = Standard, solange der Admin nichts eingestellt hat. Admins dürfen immer alles.
+const RECHTE = [
+  {key:"warn",      label:"Verwarnen",                    def:false},
+  {key:"reports",   label:"Einsatzberichte schreiben",    def:true},
+  {key:"accidents", label:"Arbeitsunfälle eintragen",     def:true},
+  {key:"courses",   label:"Lehrgänge erstellen/vergeben", def:false},
+  {key:"docs",      label:"Dokumente erstellen",          def:false},
+  {key:"announce",  label:"Ankündigungen schreiben",      def:false},
+  {key:"events",    label:"Termine anlegen",              def:false}
+];
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),3200)}
 function zeige(was){["auth","pending","app"].forEach(id=>$("#"+id).classList.toggle("hidden",id!==was))}
 function fehlertext(e){
@@ -586,6 +597,11 @@ document.addEventListener("change", async e => {
 document.addEventListener("change", async e => {
   const cb = e.target.closest(".perm-cb"); if(!cb) return;
   try{await updateDoc(doc(db,"users",cb.dataset.uid),{["permissions."+cb.dataset.key]:cb.checked}); toast("Bereiche gespeichert")}
+  catch(err){cb.checked=!cb.checked; toast(fehlertext(err))}
+});
+document.addEventListener("change", async e => {
+  const cb = e.target.closest(".recht-cb"); if(!cb) return;
+  try{await updateDoc(doc(db,"users",cb.dataset.uid), cb.dataset.key==="warn" ? {canWarn:cb.checked} : {["rights."+cb.dataset.key]:cb.checked}); toast("Rechte gespeichert")}
   catch(err){cb.checked=!cb.checked; toast(fehlertext(err))}
 });
 $("#rForm").onsubmit = async e => {
@@ -642,6 +658,8 @@ const istAdmin = () => me && me.role === "admin";
 const darf = key => !!me && (me.role === "admin" || !me.permissions || me.permissions[key] !== false);
 // Verwarnen dürfen Admins und alle, deren Rolle "darf verwarnen" hat (wird beim Zuweisen der Rolle auf users/{uid}.canWarn kopiert).
 const darfVerwarnen = () => !!me && (me.role === "admin" || me.canWarn === true);
+const hatRecht = (u,key) => key==="warn" ? (u.role==="admin" || u.canWarn===true) : (u.role==="admin" || (u.rights && key in u.rights ? u.rights[key]===true : RECHTE.find(r => r.key===key).def));
+const kann = key => !!me && hatRecht(me,key);
 
 /* ---------- Navigation ---------- */
 $("#nav").onclick = e => {
@@ -719,16 +737,16 @@ function renderAll(){
   $("#aListe").innerHTML = aTreffer.map(unfallKarte).join("") || `<div class="leer">${qa?"Kein Arbeitsunfall passt zu deiner Suche.":"Noch keine Arbeitsunfälle eingetragen."}</div>`;
 
   // Lehrgänge
-  $("#lAdmin").classList.toggle("hidden",!istAdmin());
-  $("#lVerlaufBox").classList.toggle("hidden",!istAdmin());
-  if(istAdmin()){
+  $("#lAdmin").classList.toggle("hidden",!kann("courses"));
+  $("#lVerlaufBox").classList.toggle("hidden",!kann("courses"));
+  if(kann("courses")){
     const su = $("#lvUser"), sk = $("#lvKurs"), au = su.value, ak = sk.value;
     su.innerHTML = users.filter(u => u.active).map(u => `<option value="${u.id}">${esc(u.name)} (${esc(u.rank)})</option>`).join("");
     sk.innerHTML = courses.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
     if(au) su.value = au;
     if(ak) sk.value = ak;
     if(!$("#lvDatum").value) $("#lvDatum").value = new Date().toISOString().slice(0,10);
-    $("#lVerlauf").innerHTML = awards.map(a => `<li><b>${esc(a.userName)}</b>: ${esc(a.courseName)} · ${fmtDatum(a.date)}${a.note?` · ${esc(a.note)}`:""}<br><small>vergeben von ${esc(a.byName)} · ${fmtTs(a.createdAt)}</small> <button class="btn gefahr klein" data-act="vergabe-loeschen" data-id="${a.id}" type="button">Entziehen</button></li>`).join("") || `<li class="leer">Noch keine Lehrgänge vergeben.</li>`;
+    $("#lVerlauf").innerHTML = awards.map(a => `<li><b>${esc(a.userName)}</b>: ${esc(a.courseName)} · ${fmtDatum(a.date)}${a.note?` · ${esc(a.note)}`:""}<br><small>vergeben von ${esc(a.byName)} · ${fmtTs(a.createdAt)}</small> ${istAdmin()?`<button class="btn gefahr klein" data-act="vergabe-loeschen" data-id="${a.id}" type="button">Entziehen</button>`:""}</li>`).join("") || `<li class="leer">Noch keine Lehrgänge vergeben.</li>`;
   }
   $("#lListe").innerHTML = courses.map(c => {
     const h = awards.filter(a => a.courseId===c.id);
@@ -808,6 +826,7 @@ function renderAll(){
         <td><span class="status ${u.active?"an":"aus"}">${u.active?"Aktiv":"Gesperrt"}</span></td>
         <td><div class="perm">${BEREICHE.map(b => { const admin = u.role==="admin", an = admin || !u.permissions || u.permissions[b.key] !== false;
           return `<label><input type="checkbox" class="perm-cb" data-uid="${u.id}" data-key="${b.key}"${an?" checked":""}${admin?" disabled":""}><span>${esc(b.label)}</span></label>`; }).join("")}${u.role==="admin"?"<small>Admins sehen alles.</small>":""}</div></td>
+        <td><div class="perm">${RECHTE.map(r => `<label><input type="checkbox" class="recht-cb" data-uid="${u.id}" data-key="${r.key}"${hatRecht(u,r.key)?" checked":""}${u.role==="admin"?" disabled":""}><span>${esc(r.label)}</span></label>`).join("")}</div></td>
         <td>${ich?"":`<button class="btn sek klein" data-act="zugang" data-id="${u.id}" type="button">${u.active?"Sperren":"Freischalten"}</button>
         <button class="btn gefahr klein" data-act="mitglied-loeschen" data-id="${u.id}" type="button">Löschen</button>`}</td></tr>`;
     }).join("");
@@ -818,7 +837,7 @@ function renderAll(){
 function renderNeu(){
   const adm = istAdmin(), jetzt = new Date().toISOString().slice(0,16);
   const loeschen = (act,id) => adm ? `<button class="btn gefahr klein" data-act="${act}" data-id="${id}" type="button">Löschen</button>` : "";
-  ["#anForm","#tmForm","#dkForm"].forEach(x => $(x).classList.toggle("hidden",!adm));
+  [["#anForm","announce"],["#tmForm","events"],["#dkForm","docs"],["#bForm","reports"],["#aForm","accidents"]].forEach(([x,k]) => $(x).classList.toggle("hidden",!kann(k)));
 
   // Ankündigungen
   const anKarte = a => `<article class="bericht"><div class="kopf"><h3>${esc(a.title)}</h3>${loeschen("an-loeschen",a.id)}</div><div class="meta">${a.important?`<span class="tag schwer">Wichtig</span>`:""}${esc(a.authorName)} · ${fmtTs(a.createdAt)}</div><p>${esc(a.text)}</p></article>`;
