@@ -71,6 +71,7 @@ th{background:var(--papier);font-weight:600}
 .status{font-weight:600}.status.an{color:var(--ok)}.status.aus{color:var(--rot-d)}
 .leer{color:var(--muted);padding:1.2rem;background:#fff;border:1px dashed #B8BCC2}
 .log li{padding:.55rem 0;border-bottom:1px solid var(--nebel)}
+.namelink{background:none;border:0;padding:0;color:var(--rot-d);font-weight:600;text-decoration:underline;cursor:pointer;text-align:left}
 .crew{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.1rem .8rem;max-height:200px;overflow:auto;border:1.5px solid #B8BCC2;border-radius:3px;background:#fff;padding:.4rem .6rem}
 .crew label{display:flex;align-items:center;gap:.45rem;margin:0;font-weight:500;font-size:.9rem;cursor:pointer}
 .crew input{width:auto;padding:0;margin:0}
@@ -135,6 +136,10 @@ th{background:var(--papier);font-weight:600}
    <button data-view="berichte">Einsatzberichte</button>
    <button data-view="befoerderungen">Beförderungen</button>
    <button data-view="arbeitsunfaelle">Arbeitsunfälle</button>
+   <button data-view="lehrgaenge">Lehrgänge</button>
+   <button data-view="verwarnungen">Verwarnungen</button>
+   <button data-view="telefonbuch">Telefonbuch</button>
+   <button data-view="profil">Mein Profil</button>
    <button data-view="verwaltung" id="navAdmin" class="hidden">Verwaltung</button>
   </nav>
   <div class="ich"><b id="ichName"></b><small id="ichRang"></small>
@@ -220,6 +225,103 @@ th{background:var(--papier);font-weight:600}
    <div id="aListe"></div>
   </section>
 
+  <!-- Lehrgänge -->
+  <section id="v-lehrgaenge" class="hidden">
+   <header><h2>Lehrgänge</h2><p>Ausbildungen der Feuerwehr und wer sie absolviert hat.</p></header>
+   <div id="lAdmin" class="hidden">
+    <form class="panel" id="lForm">
+     <h3>Neuen Lehrgang erstellen</h3>
+     <div class="zeile2">
+      <div><label for="lName">Name</label><input id="lName" required maxlength="80" placeholder="z. B. Atemschutzgeräteträger"></div>
+      <div><label for="lBeschr">Kurzbeschreibung</label><input id="lBeschr" maxlength="200" placeholder="optional"></div>
+     </div>
+     <div class="msg" id="lMsg" role="alert"></div>
+     <button class="btn" type="submit">Lehrgang erstellen</button>
+    </form>
+    <form class="panel" id="lvForm">
+     <h3>Lehrgang vergeben</h3>
+     <div class="zeile2">
+      <div><label for="lvUser">Mitglied</label><select id="lvUser"></select></div>
+      <div><label for="lvKurs">Lehrgang</label><select id="lvKurs"></select></div>
+      <div><label for="lvDatum">Abgeschlossen am</label><input id="lvDatum" type="date" required></div>
+      <div><label for="lvNotiz">Vermerk</label><input id="lvNotiz" maxlength="120" placeholder="optional"></div>
+     </div>
+     <div class="msg" id="lvMsg" role="alert"></div>
+     <button class="btn" type="submit">Lehrgang vergeben</button>
+    </form>
+   </div>
+   <h3 style="margin-bottom:.7rem">Alle Lehrgänge</h3>
+   <div id="lListe"></div>
+   <div id="lVerlaufBox" class="hidden">
+    <h3 style="margin:1.5rem 0 .6rem">Vergabe-Verlauf</h3>
+    <ul class="log panel" id="lVerlauf"></ul>
+   </div>
+  </section>
+
+  <!-- Verwarnungen -->
+  <section id="v-verwarnungen" class="hidden">
+   <header><h2>Verwarnungen</h2><p id="wSub"></p></header>
+   <form class="panel hidden" id="wForm">
+    <h3>Verwarnung erteilen</h3>
+    <div class="zeile2">
+     <div><label for="wUser">Mitglied</label><select id="wUser"></select></div>
+     <div><label for="wStufe">Stufe</label>
+      <select id="wStufe"><option>Mündliche Verwarnung</option><option>Schriftliche Verwarnung</option><option>Letzte Verwarnung</option></select></div>
+    </div>
+    <label for="wGrund">Grund</label>
+    <input id="wGrund" required maxlength="200">
+    <label for="wText">Details</label>
+    <textarea id="wText" rows="3" maxlength="1500" placeholder="optional"></textarea>
+    <div class="msg" id="wMsg" role="alert"></div>
+    <button class="btn" type="submit">Verwarnung erteilen</button>
+   </form>
+   <div id="wListe"></div>
+  </section>
+
+  <!-- Telefonbuch -->
+  <section id="v-telefonbuch" class="hidden">
+   <header><h2>Telefonbuch</h2><p>Erreichbarkeit aller aktiven Mitglieder.</p></header>
+   <form class="panel" id="tForm">
+    <h3>Meine Telefonnummer</h3>
+    <label for="tNr">Telefonnummer</label>
+    <input id="tNr" type="tel" maxlength="30" placeholder="z. B. 555-0142">
+    <div class="msg" id="tMsg" role="alert"></div>
+    <button class="btn" type="submit">Speichern</button>
+   </form>
+   <label for="tSuche" style="margin-top:0">Mitglieder durchsuchen</label>
+   <input id="tSuche" type="search" placeholder="Name, Dienstnummer, Rang oder Nummer" style="margin-bottom:1rem">
+   <div class="tabelle"><table>
+    <thead><tr><th>Name</th><th>Dienstnr.</th><th>Rang</th><th>Telefon</th></tr></thead>
+    <tbody id="tTab"></tbody>
+   </table></div>
+  </section>
+
+  <!-- Mitgliederprofil -->
+  <section id="v-profil" class="hidden">
+   <header><h2 id="pfName"></h2><p id="pfSub"></p></header>
+   <div class="zahlen" id="pfZahlen"></div>
+   <div class="panel"><h3 style="margin-bottom:.4rem">Stammdaten</h3><div id="pfDaten"></div></div>
+   <form class="panel hidden" id="pwForm">
+    <h3>Passwort ändern</h3>
+    <div class="zeile2">
+     <div><label for="pwAlt">Aktuelles Passwort</label><input id="pwAlt" type="password" required autocomplete="current-password"></div>
+     <div></div>
+     <div><label for="pwNeu">Neues Passwort</label><input id="pwNeu" type="password" required minlength="6" autocomplete="new-password"></div>
+     <div><label for="pwNeu2">Neues Passwort wiederholen</label><input id="pwNeu2" type="password" required minlength="6" autocomplete="new-password"></div>
+    </div>
+    <div class="msg" id="pwMsg" role="alert"></div>
+    <button class="btn" type="submit">Passwort ändern</button>
+   </form>
+   <form class="panel hidden" id="apwForm">
+    <h3>Passwort setzen (Admin)</h3>
+    <label for="apwNeu">Neues Passwort für <span id="apwName"></span></label>
+    <input id="apwNeu" type="text" required minlength="6" maxlength="128" autocomplete="off">
+    <div class="msg" id="apwMsg" role="alert"></div>
+    <button class="btn" type="submit">Passwort setzen</button>
+   </form>
+   <div id="pfListen"></div>
+  </section>
+
   <!-- Verwaltung -->
   <section id="v-verwaltung" class="hidden">
    <header><h2>Verwaltung</h2><p>Konten anlegen, sperren, Rollen vergeben und Bereiche pro Mitglied festlegen.</p></header>
@@ -241,6 +343,7 @@ th{background:var(--papier);font-weight:600}
     <div class="zeile2">
      <div><label for="rName">Name der Rolle</label><input id="rName" required maxlength="40" placeholder="z. B. Zugskommandant"></div>
      <div><label for="rAdmin">Rechte</label><select id="rAdmin"><option value="0">Normale Rechte</option><option value="1">Admin-Rechte</option></select></div>
+     <div><label for="rWarn">Verwarnungen</label><select id="rWarn"><option value="0">Darf nicht verwarnen</option><option value="1">Darf verwarnen</option></select></div>
     </div>
     <div class="msg" id="rMsg" role="alert"></div>
     <button class="btn" type="submit">Rolle hinzufügen</button>
@@ -257,8 +360,8 @@ th{background:var(--papier);font-weight:600}
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc,addDoc,deleteDoc,updateDoc,collection,query,orderBy,limit,onSnapshot,writeBatch,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,updatePassword,reauthenticateWithCredential,EmailAuthProvider} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,doc,getDoc,setDoc,addDoc,deleteDoc,updateDoc,collection,query,orderBy,limit,where,onSnapshot,writeBatch,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // 1) Trag hier die Werte aus der Firebase-Konsole ein (Projekteinstellungen → Web-App)
 const firebaseConfig = {
@@ -289,10 +392,11 @@ const dauer = (a,b) => {
   const h = Math.floor(min/60), m = min % 60;
   return h ? `${h} Std. ${m} Min.` : `${m} Min.`;
 };
+const fmtDatum = s => s ? new Date(s).toLocaleDateString("de-AT",{dateStyle:"medium"}) : "";
 const fmtTs = t => t && t.toDate ? t.toDate().toLocaleDateString("de-AT",{dateStyle:"medium"}) : "gerade eben";
 
-let me = null, reports = [], promos = [], accidents = [], users = [], rollen = [], view = "start";
-const alleRollen = () => [{name:"Mitglied",admin:false},{name:"Admin",admin:true},...rollen];
+let me = null, reports = [], promos = [], accidents = [], courses = [], awards = [], warnings = [], users = [], rollen = [], view = "start", profilId = null;
+const alleRollen = () => [{name:"Mitglied",admin:false,canWarn:false},{name:"Admin",admin:true,canWarn:true},...rollen];
 let userUnsub = null, dataUnsubs = [], dataSig = "";
 
 // Bereiche, die pro Mitglied ein-/ausgeblendet werden können (Übersicht und Verwaltung sind nicht dabei).
@@ -300,7 +404,8 @@ let userUnsub = null, dataUnsubs = [], dataSig = "";
 const BEREICHE = [
   {key:"reports",    view:"berichte",       label:"Einsatzberichte"},
   {key:"promotions", view:"befoerderungen", label:"Beförderungen"},
-  {key:"accidents",   view:"arbeitsunfaelle", label:"Arbeitsunfälle"}
+  {key:"accidents",   view:"arbeitsunfaelle", label:"Arbeitsunfälle"},
+  {key:"courses",     view:"lehrgaenge",      label:"Lehrgänge"}
 ];
 
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),3200)}
@@ -322,6 +427,17 @@ document.addEventListener("click", async e => {
   const act = b.dataset.act, id = b.dataset.id;
   try{
     if(act==="logout") await signOut(auth);
+    if(act==="profil"){profilId=id;view="profil";renderAll();window.scrollTo(0,0)}
+    if(act==="kurs-loeschen" && confirm("Lehrgang entfernen? Bereits vergebene Lehrgänge bleiben in den Profilen stehen.")){await deleteDoc(doc(db,"courses",id)); toast("Lehrgang entfernt")}
+    if(act==="vergabe-loeschen" && confirm("Diesen Lehrgang dem Mitglied wieder entziehen?")){await deleteDoc(doc(db,"courseAwards",id)); toast("Lehrgang entzogen")}
+    if(act==="verwarnung-loeschen" && confirm("Diese Verwarnung endgültig löschen?")){await deleteDoc(doc(db,"warnings",id)); toast("Verwarnung gelöscht")}
+    if(act==="rolle-warn"){
+      const r = rollen.find(x => x.id===id); if(!r) return;
+      const neu = !r.canWarn, batch = writeBatch(db);
+      batch.update(doc(db,"roles",id),{canWarn:neu});
+      users.filter(u => u.funktion===r.name).forEach(u => batch.update(doc(db,"users",u.id),{canWarn:neu}));
+      await batch.commit(); toast(neu?"Rolle darf jetzt verwarnen":"Rolle darf nicht mehr verwarnen");
+    }
     if(act==="zugang"){const u=users.find(x=>x.id===id); await updateDoc(doc(db,"users",id),{active:!u.active}); toast(u.active?"Zugang gesperrt":"Zugang freigeschaltet")}
     if(act==="rolle"){const u=users.find(x=>x.id===id); await updateDoc(doc(db,"users",id),{role:u.role==="admin"?"member":"admin"}); toast("Rolle geändert")}
     if(act==="mitglied-loeschen" && confirm("Dieses Konto löschen? Die Person kann sich danach nicht mehr einloggen.")){await deleteDoc(doc(db,"users",id)); toast("Konto gelöscht")}
@@ -334,7 +450,7 @@ document.addEventListener("click", async e => {
 document.addEventListener("change", async e => {
   const sel = e.target.closest(".rolle-sel"); if(!sel) return;
   const r = alleRollen().find(x => x.name === sel.value); if(!r) return;
-  try{await updateDoc(doc(db,"users",sel.dataset.uid),{funktion:r.name,role:r.admin?"admin":"member"}); toast("Rolle geändert")}
+  try{await updateDoc(doc(db,"users",sel.dataset.uid),{funktion:r.name,role:r.admin?"admin":"member",canWarn:!!(r.admin||r.canWarn)}); toast("Rolle geändert")}
   catch(err){toast(fehlertext(err))}
 });
 document.addEventListener("change", async e => {
@@ -346,7 +462,7 @@ $("#rForm").onsubmit = async e => {
   e.preventDefault(); $("#rMsg").textContent = "";
   const name = $("#rName").value.trim();
   if(alleRollen().some(r => r.name.toLowerCase() === name.toLowerCase())){$("#rMsg").textContent = "Diese Rolle gibt es schon.";return}
-  try{await addDoc(collection(db,"roles"),{name,admin:$("#rAdmin").value==="1"}); e.target.reset(); toast("Rolle hinzugefügt")}
+  try{await addDoc(collection(db,"roles"),{name,admin:$("#rAdmin").value==="1",canWarn:$("#rWarn").value==="1"}); e.target.reset(); toast("Rolle hinzugefügt")}
   catch(err){$("#rMsg").textContent = fehlertext(err)}
 };
 
@@ -363,7 +479,7 @@ onAuthStateChanged(auth, user => {
 
 function startData(){
   // Nur Daten abonnieren, die das Mitglied sehen darf; bei geänderten Rechten neu starten.
-  const sig = BEREICHE.map(b => darf(b.key)).join();
+  const sig = BEREICHE.map(b => darf(b.key)).join() + "|" + darfVerwarnen();
   if(dataUnsubs.length && sig === dataSig) return;
   stopData(); dataSig = sig;
   const f = err => toast(fehlertext(err));
@@ -372,18 +488,30 @@ function startData(){
     onSnapshot(query(collection(db,"roles"),orderBy("name")), s => {rollen=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f)
   );
   if(darf("reports")) dataUnsubs.push(onSnapshot(query(collection(db,"reports"),orderBy("date","desc"),limit(100)), s => {reports=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f));
+  if(darf("courses")) dataUnsubs.push(
+    onSnapshot(query(collection(db,"courses"),orderBy("name")), s => {courses=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f),
+    onSnapshot(query(collection(db,"courseAwards"),orderBy("createdAt","desc"),limit(500)), s => {awards=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f)
+  );
+  // Verwarnungen: wer verwarnen darf, sieht alle; alle anderen nur die eigenen.
+  const wq = darfVerwarnen() ? query(collection(db,"warnings"),orderBy("createdAt","desc"),limit(200)) : query(collection(db,"warnings"),where("userUid","==",me.id));
+  dataUnsubs.push(onSnapshot(wq, s => {
+    warnings = s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b) => (b.createdAt?.toMillis?.() ?? Date.now()) - (a.createdAt?.toMillis?.() ?? Date.now()));
+    renderAll();
+  }, f));
   if(darf("accidents")) dataUnsubs.push(onSnapshot(query(collection(db,"accidents"),orderBy("date","desc"),limit(100)), s => {accidents=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f));
   if(darf("promotions")) dataUnsubs.push(onSnapshot(query(collection(db,"promotions"),orderBy("createdAt","desc"),limit(100)), s => {promos=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f));
 }
-function stopData(){dataUnsubs.forEach(u=>u());dataUnsubs=[];dataSig="";reports=[];promos=[];accidents=[];users=[];rollen=[]}
+function stopData(){dataUnsubs.forEach(u=>u());dataUnsubs=[];dataSig="";reports=[];promos=[];accidents=[];courses=[];awards=[];warnings=[];users=[];rollen=[]}
 const istAdmin = () => me && me.role === "admin";
 // Admins sehen alles. Sonst zählt permissions[key]; fehlt der Eintrag, ist der Bereich erlaubt.
 const darf = key => !!me && (me.role === "admin" || !me.permissions || me.permissions[key] !== false);
+// Verwarnen dürfen Admins und alle, deren Rolle "darf verwarnen" hat (wird beim Zuweisen der Rolle auf users/{uid}.canWarn kopiert).
+const darfVerwarnen = () => !!me && (me.role === "admin" || me.canWarn === true);
 
 /* ---------- Navigation ---------- */
 $("#nav").onclick = e => {
   const b = e.target.closest("[data-view]"); if(!b) return;
-  view = b.dataset.view; renderAll();
+  view = b.dataset.view; if(view==="profil") profilId = me.id; renderAll();
 };
 
 /* ---------- Anzeige ---------- */
@@ -392,6 +520,14 @@ function berichtKarte(r){
     ${istAdmin()?`<button class="btn gefahr klein" data-act="loeschen" data-id="${r.id}" type="button">Löschen</button>`:""}</div>
     <div class="meta"><span class="tag">${esc(r.type)}</span>${esc(r.location)} · ${fmt(r.date)}${r.endDate?` bis ${fmt(r.endDate)} (${dauer(r.date,r.endDate)})`:""} · ${esc(r.authorName)}</div>
     <p>${esc(r.narrative)}</p>${r.crew&&r.crew.length?`<p style="margin-top:.5rem"><b>Beteiligt:</b> ${r.crew.map(c => esc(c.name)).join(", ")}</p>`:""}</article>`;
+}
+
+function verwarnKarte(w){
+  const name = istAdmin()||darfVerwarnen() ? `<button class="namelink" data-act="profil" data-id="${w.userUid}" type="button">${esc(w.userName)}</button>` : esc(w.userName);
+  return `<article class="bericht"><div class="kopf"><h3>${name}</h3>
+    ${istAdmin()?`<button class="btn gefahr klein" data-act="verwarnung-loeschen" data-id="${w.id}" type="button">Löschen</button>`:""}</div>
+    <div class="meta"><span class="tag${w.level==="Letzte Verwarnung"?" schwer":""}">${esc(w.level)}</span>durch ${esc(w.byName)} · ${fmtTs(w.createdAt)}</div>
+    <p><b>Grund:</b> ${esc(w.reason)}</p>${w.details?`<p>${esc(w.details)}</p>`:""}</article>`;
 }
 
 function unfallKarte(a){
@@ -412,8 +548,9 @@ function renderAll(){
   if(view==="verwaltung" && !istAdmin()) view = "start";
   const sperre = BEREICHE.find(b => b.view===view && !darf(b.key));
   if(sperre) view = "start";
-  document.querySelectorAll("#nav [data-view]").forEach(b => b.classList.toggle("aktiv",b.dataset.view===view));
-  ["start","berichte","befoerderungen","arbeitsunfaelle","verwaltung"].forEach(v => $("#v-"+v).classList.toggle("hidden",v!==view));
+  if(view==="profil" && !(users.find(u => u.id===profilId) || (profilId===me.id ? me : null))) view = "start";
+  document.querySelectorAll("#nav [data-view]").forEach(b => b.classList.toggle("aktiv",b.dataset.view===view && (view!=="profil" || profilId===me.id)));
+  ["start","berichte","befoerderungen","arbeitsunfaelle","lehrgaenge","verwarnungen","telefonbuch","profil","verwaltung"].forEach(v => $("#v-"+v).classList.toggle("hidden",v!==view));
 
   // Übersicht
   const monat = new Date().toISOString().slice(0,7);
@@ -444,6 +581,71 @@ function renderAll(){
   const aTreffer = accidents.filter(a => !qa || [a.person,a.location,a.type,a.injury,a.authorName].join(" ").toLowerCase().includes(qa));
   $("#aListe").innerHTML = aTreffer.map(unfallKarte).join("") || `<div class="leer">${qa?"Kein Arbeitsunfall passt zu deiner Suche.":"Noch keine Arbeitsunfälle eingetragen."}</div>`;
 
+  // Lehrgänge
+  $("#lAdmin").classList.toggle("hidden",!istAdmin());
+  $("#lVerlaufBox").classList.toggle("hidden",!istAdmin());
+  if(istAdmin()){
+    const su = $("#lvUser"), sk = $("#lvKurs"), au = su.value, ak = sk.value;
+    su.innerHTML = users.filter(u => u.active).map(u => `<option value="${u.id}">${esc(u.name)} (${esc(u.rank)})</option>`).join("");
+    sk.innerHTML = courses.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+    if(au) su.value = au;
+    if(ak) sk.value = ak;
+    if(!$("#lvDatum").value) $("#lvDatum").value = new Date().toISOString().slice(0,10);
+    $("#lVerlauf").innerHTML = awards.map(a => `<li><b>${esc(a.userName)}</b>: ${esc(a.courseName)} · ${fmtDatum(a.date)}${a.note?` · ${esc(a.note)}`:""}<br><small>vergeben von ${esc(a.byName)} · ${fmtTs(a.createdAt)}</small> <button class="btn gefahr klein" data-act="vergabe-loeschen" data-id="${a.id}" type="button">Entziehen</button></li>`).join("") || `<li class="leer">Noch keine Lehrgänge vergeben.</li>`;
+  }
+  $("#lListe").innerHTML = courses.map(c => {
+    const h = awards.filter(a => a.courseId===c.id);
+    return `<article class="bericht"><div class="kopf"><h3>${esc(c.name)}</h3>${istAdmin()?`<button class="btn gefahr klein" data-act="kurs-loeschen" data-id="${c.id}" type="button">Löschen</button>`:""}</div>
+      ${c.description?`<div class="meta">${esc(c.description)}</div>`:""}
+      <p>${h.length?h.map(a => `<span class="tag">${esc(a.userName)}</span>`).join(""):"<small>Noch von niemandem absolviert.</small>"}</p></article>`;
+  }).join("") || `<div class="leer">Noch keine Lehrgänge angelegt.</div>`;
+
+  // Verwarnungen
+  $("#wForm").classList.toggle("hidden",!darfVerwarnen());
+  $("#wSub").textContent = darfVerwarnen() ? "Verwarnungen erteilen und einsehen." : "Deine eigenen Verwarnungen.";
+  if(darfVerwarnen()){
+    const sw = $("#wUser"), aw = sw.value;
+    sw.innerHTML = users.filter(u => u.active && u.id!==me.id).map(u => `<option value="${u.id}">${esc(u.name)} (${esc(u.rank)})</option>`).join("");
+    if(aw) sw.value = aw;
+  }
+  $("#wListe").innerHTML = warnings.map(verwarnKarte).join("") || `<div class="leer">${darfVerwarnen()?"Noch keine Verwarnungen erteilt.":"Du hast keine Verwarnungen."}</div>`;
+
+  // Telefonbuch
+  if(document.activeElement !== $("#tNr")) $("#tNr").value = me.phone || "";
+  const qt = $("#tSuche").value.trim().toLowerCase();
+  const tl = users.filter(u => u.active && (!qt || [u.name,u.dienstnummer,u.rank,u.phone].join(" ").toLowerCase().includes(qt)));
+  $("#tTab").innerHTML = tl.map(u => `<tr><td><button class="namelink" data-act="profil" data-id="${u.id}" type="button">${esc(u.name)}</button></td><td>${esc(u.dienstnummer)}</td><td>${esc(u.rank)}</td><td>${u.phone?esc(u.phone):"<small>nicht eingetragen</small>"}</td></tr>`).join("") || `<tr><td colspan="4" class="leer">Keine Treffer.</td></tr>`;
+
+  // Mitgliederprofil
+  if(view==="profil"){
+    const u = users.find(x => x.id===profilId) || me, eigen = u.id===me.id;
+    const uw = warnings.filter(w => w.userUid===u.id), wSichtbar = eigen || darfVerwarnen();
+    $("#pfName").textContent = u.name;
+    $("#pfSub").textContent = `${u.rank||""} · ${u.dienstnummer||""}`;
+    const z = [];
+    if(darf("reports")) z.push([reports.filter(r => r.authorUid===u.id).length,"Berichte verfasst"],[reports.filter(r => (r.crew||[]).some(c => c.uid===u.id)).length,"Einsatzteilnahmen"]);
+    if(darf("courses")) z.push([awards.filter(a => a.userUid===u.id).length,"Lehrgänge"]);
+    if(wSichtbar) z.push([uw.length,"Verwarnungen"]);
+    $("#pfZahlen").innerHTML = z.map(x => `<div class="zahl"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
+    const daten = [["Rolle",u.funktion || (u.role==="admin"?"Admin":"Mitglied")],["Telefon",u.phone || "nicht eingetragen"],["Im Portal seit",u.createdAt?fmtTs(u.createdAt):"–"]];
+    if(istAdmin()) daten.push(["Zugang",u.active?"Aktiv":"Gesperrt"]);
+    $("#pfDaten").innerHTML = `<ul class="log">${daten.map(d => `<li><b>${d[0]}:</b> ${esc(d[1])}</li>`).join("")}</ul>`;
+    let l = "";
+    if(darf("courses")){
+      const aw = awards.filter(a => a.userUid===u.id);
+      l += `<h3 style="margin-bottom:.6rem">Lehrgänge</h3><ul class="log panel">${aw.map(a => `<li><b>${esc(a.courseName)}</b> · ${fmtDatum(a.date)}${a.note?` · ${esc(a.note)}`:""}</li>`).join("") || `<li class="leer">Noch keine Lehrgänge.</li>`}</ul>`;
+    }
+    if(darf("promotions")){
+      const pr = promos.filter(p => p.userUid===u.id);
+      l += `<h3 style="margin-bottom:.6rem">Beförderungen</h3><ul class="log panel">${pr.map(p => `<li>${esc(p.from)} → <b>${esc(p.to)}</b><br><small>${esc(p.reason)} · durch ${esc(p.byName)} · ${fmtTs(p.createdAt)}</small></li>`).join("") || `<li class="leer">Noch keine Beförderungen.</li>`}</ul>`;
+    }
+    if(wSichtbar) l += `<h3 style="margin-bottom:.6rem">Verwarnungen</h3>${uw.map(verwarnKarte).join("") || `<div class="leer">Keine Verwarnungen.</div>`}`;
+    $("#pfListen").innerHTML = l;
+    $("#pwForm").classList.toggle("hidden",!eigen);
+    $("#apwForm").classList.toggle("hidden",!(istAdmin() && !eigen));
+    $("#apwName").textContent = u.name;
+  }
+
   // Beförderungen
   $("#pForm").classList.toggle("hidden",!istAdmin());
   if(istAdmin()){
@@ -460,11 +662,11 @@ function renderAll(){
     const nr = $("#nRolle"), alt2 = nr.value;
     nr.innerHTML = alleRollen().map(r => `<option>${esc(r.name)}</option>`).join("");
     if(alt2) nr.value = alt2;
-    $("#rListe").innerHTML = rollen.map(r => `<span class="tag">${esc(r.name)}${r.admin?" · Admin":""}</span><button class="btn gefahr klein" data-act="rolle-loeschen" data-id="${r.id}" type="button" aria-label="Rolle ${esc(r.name)} entfernen">Entfernen</button> `).join("") || "<small>Noch keine eigenen Rollen. Mitglied und Admin gibt es immer.</small>";
+    $("#rListe").innerHTML = rollen.map(r => `<span class="tag">${esc(r.name)}${r.admin?" · Admin":""}${r.canWarn?" · darf verwarnen":""}</span><button class="btn sek klein" data-act="rolle-warn" data-id="${r.id}" type="button">${r.canWarn?"Verwarnen entziehen":"Verwarnen erlauben"}</button> <button class="btn gefahr klein" data-act="rolle-loeschen" data-id="${r.id}" type="button" aria-label="Rolle ${esc(r.name)} entfernen">Entfernen</button><br>`).join("") || "<small>Noch keine eigenen Rollen. Mitglied und Admin gibt es immer.</small>";
     $("#uTab").innerHTML = users.map(u => {
       const ich = u.id === me.id, cur = u.funktion || (u.role==="admin"?"Admin":"Mitglied");
       const opts = alleRollen().map(r => `<option${r.name===cur?" selected":""}>${esc(r.name)}</option>`).join("");
-      return `<tr><td>${esc(u.name)}${u.username?`<br><small>${esc(u.username)}</small>`:""}</td><td>${esc(u.dienstnummer)}</td><td>${esc(u.rank)}</td>
+      return `<tr><td><button class="namelink" data-act="profil" data-id="${u.id}" type="button">${esc(u.name)}</button>${u.username?`<br><small>${esc(u.username)}</small>`:""}</td><td>${esc(u.dienstnummer)}</td><td>${esc(u.rank)}</td>
         <td>${ich?esc(cur):`<select class="rolle-sel" data-uid="${u.id}" aria-label="Rolle von ${esc(u.name)}">${opts}</select>`}</td>
         <td><span class="status ${u.active?"an":"aus"}">${u.active?"Aktiv":"Gesperrt"}</span></td>
         <td><div class="perm">${BEREICHE.map(b => { const admin = u.role==="admin", an = admin || !u.permissions || u.permissions[b.key] !== false;
@@ -512,12 +714,78 @@ $("#aForm").onsubmit = async e => {
   }catch(err){$("#aMsg").textContent = fehlertext(err)}
 };
 
+$("#tSuche").oninput = renderAll;
+
+$("#lForm").onsubmit = async e => {
+  e.preventDefault(); $("#lMsg").textContent = "";
+  const name = $("#lName").value.trim();
+  if(courses.some(c => c.name.toLowerCase()===name.toLowerCase())){$("#lMsg").textContent = "Diesen Lehrgang gibt es schon.";return}
+  try{await addDoc(collection(db,"courses"),{name,description:$("#lBeschr").value.trim(),createdAt:serverTimestamp()}); e.target.reset(); toast("Lehrgang erstellt")}
+  catch(err){$("#lMsg").textContent = fehlertext(err)}
+};
+
+$("#lvForm").onsubmit = async e => {
+  e.preventDefault(); $("#lvMsg").textContent = "";
+  const u = users.find(x => x.id===$("#lvUser").value), c = courses.find(x => x.id===$("#lvKurs").value);
+  if(!u || !c){$("#lvMsg").textContent = "Bitte Mitglied und Lehrgang auswählen.";return}
+  if(awards.some(a => a.userUid===u.id && a.courseId===c.id)){$("#lvMsg").textContent = `${u.name} hat „${c.name}“ bereits.`;return}
+  try{
+    await addDoc(collection(db,"courseAwards"),{courseId:c.id,courseName:c.name,userUid:u.id,userName:u.name,date:$("#lvDatum").value,note:$("#lvNotiz").value.trim(),byName:me.name,createdAt:serverTimestamp()});
+    $("#lvNotiz").value = ""; toast("Lehrgang vergeben");
+  }catch(err){$("#lvMsg").textContent = fehlertext(err)}
+};
+
+$("#wForm").onsubmit = async e => {
+  e.preventDefault(); $("#wMsg").textContent = "";
+  const u = users.find(x => x.id===$("#wUser").value);
+  if(!u){$("#wMsg").textContent = "Bitte ein Mitglied auswählen.";return}
+  try{
+    await addDoc(collection(db,"warnings"),{userUid:u.id,userName:u.name,level:$("#wStufe").value,reason:$("#wGrund").value.trim(),details:$("#wText").value.trim(),byUid:me.id,byName:me.name,createdAt:serverTimestamp()});
+    $("#wGrund").value = ""; $("#wText").value = ""; toast("Verwarnung erteilt");
+  }catch(err){$("#wMsg").textContent = fehlertext(err)}
+};
+
+$("#tForm").onsubmit = async e => {
+  e.preventDefault(); $("#tMsg").textContent = "";
+  try{await updateDoc(doc(db,"users",me.id),{phone:$("#tNr").value.trim()}); toast("Telefonnummer gespeichert")}
+  catch(err){$("#tMsg").textContent = fehlertext(err)}
+};
+
+// Eigenes Passwort ändern (mit Bestätigung des aktuellen Passworts)
+$("#pwForm").onsubmit = async e => {
+  e.preventDefault(); const msg = $("#pwMsg"); msg.textContent = "";
+  const alt = $("#pwAlt").value, neu = $("#pwNeu").value;
+  if(neu !== $("#pwNeu2").value){msg.textContent = "Die neuen Passwörter stimmen nicht überein.";return}
+  if(neu === alt){msg.textContent = "Das neue Passwort muss sich vom aktuellen unterscheiden.";return}
+  try{
+    const user = auth.currentUser;
+    await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, alt));
+    await updatePassword(user, neu);
+    e.target.reset(); toast("Passwort geändert");
+  }catch(err){
+    msg.textContent = ["auth/invalid-credential","auth/wrong-password"].includes(err.code) ? "Das aktuelle Passwort stimmt nicht." : fehlertext(err);
+  }
+};
+
+// Passwort eines anderen Mitglieds setzen: läuft über den Server (Firebase Admin SDK)
+$("#apwForm").onsubmit = async e => {
+  e.preventDefault(); const msg = $("#apwMsg"); msg.textContent = "";
+  const u = users.find(x => x.id===profilId); if(!u) return;
+  try{
+    const token = await auth.currentUser.getIdToken();
+    const res = await fetch("/api/admin/passwort",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({uid:u.id,password:$("#apwNeu").value})});
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok) throw new Error(data.fehler || "Das hat nicht geklappt. Bitte versuche es nochmal.");
+    e.target.reset(); toast(`Passwort von ${u.name} geändert`);
+  }catch(err){msg.textContent = err.message || fehlertext(err)}
+};
+
 $("#nForm").onsubmit = async e => {
   e.preventDefault(); $("#nMsg").textContent = "";
   try{
     const rl = alleRollen().find(r => r.name === $("#nRolle").value) || {name:"Mitglied",admin:false};
     const c = await createUserWithEmailAndPassword(zweitAuth,zuMail($("#nUser").value),$("#nPw").value);
-    await setDoc(doc(db,"users",c.user.uid),{name:$("#nName").value.trim(),dienstnummer:$("#nDn").value.trim(),rank:$("#nRang").value,role:rl.admin?"admin":"member",funktion:rl.name,username:$("#nUser").value.trim().toLowerCase(),active:true,createdAt:serverTimestamp()});
+    await setDoc(doc(db,"users",c.user.uid),{name:$("#nName").value.trim(),dienstnummer:$("#nDn").value.trim(),rank:$("#nRang").value,role:rl.admin?"admin":"member",canWarn:!!(rl.admin||rl.canWarn),funktion:rl.name,username:$("#nUser").value.trim().toLowerCase(),active:true,createdAt:serverTimestamp()});
     await signOut(zweitAuth);
     e.target.reset(); toast("Konto angelegt");
   }catch(err){$("#nMsg").textContent = fehlertext(err)}
