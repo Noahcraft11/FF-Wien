@@ -71,6 +71,9 @@ th{background:var(--papier);font-weight:600}
 .status{font-weight:600}.status.an{color:var(--ok)}.status.aus{color:var(--rot-d)}
 .leer{color:var(--muted);padding:1.2rem;background:#fff;border:1px dashed #B8BCC2}
 .log li{padding:.55rem 0;border-bottom:1px solid var(--nebel)}
+.crew{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.1rem .8rem;max-height:200px;overflow:auto;border:1.5px solid #B8BCC2;border-radius:3px;background:#fff;padding:.4rem .6rem}
+.crew label{display:flex;align-items:center;gap:.45rem;margin:0;font-weight:500;font-size:.9rem;cursor:pointer}
+.crew input{width:auto;padding:0;margin:0}
 .tag.mittel{background:#B26A00}.tag.schwer{background:var(--rot)}
 .perm{display:flex;flex-direction:column;gap:.15rem;min-width:150px}
 .perm label{display:flex;align-items:center;gap:.45rem;margin:0;font-weight:500;font-size:.88rem;cursor:pointer}
@@ -160,13 +163,15 @@ th{background:var(--papier);font-weight:600}
      <div><label for="bDatum">Einsatzbeginn</label><input id="bDatum" type="datetime-local" required></div>
      <div><label for="bEnde">Einsatzende</label><input id="bEnde" type="datetime-local" required></div>
     </div>
+    <label id="bCrewL">Beteiligte Mitglieder (mindestens eines)</label>
+    <div class="crew" id="bCrew" role="group" aria-labelledby="bCrewL"></div>
     <label for="bText">Ablauf des Einsatzes</label>
     <textarea id="bText" rows="5" required maxlength="3000"></textarea>
     <div class="msg" id="bMsg" role="alert"></div>
     <button class="btn" type="submit">Bericht speichern</button>
    </form>
    <label for="bSuche" style="margin-top:0">Berichte durchsuchen</label>
-   <input id="bSuche" type="search" placeholder="Titel, Ort, Art oder Verfasser" style="margin-bottom:1rem">
+   <input id="bSuche" type="search" placeholder="Titel, Ort, Art, Verfasser oder Beteiligte" style="margin-bottom:1rem">
    <div id="bListe"></div>
   </section>
 
@@ -386,7 +391,7 @@ function berichtKarte(r){
   return `<article class="bericht"><div class="kopf"><h3>${esc(r.title)}</h3>
     ${istAdmin()?`<button class="btn gefahr klein" data-act="loeschen" data-id="${r.id}" type="button">Löschen</button>`:""}</div>
     <div class="meta"><span class="tag">${esc(r.type)}</span>${esc(r.location)} · ${fmt(r.date)}${r.endDate?` bis ${fmt(r.endDate)} (${dauer(r.date,r.endDate)})`:""} · ${esc(r.authorName)}</div>
-    <p>${esc(r.narrative)}</p></article>`;
+    <p>${esc(r.narrative)}</p>${r.crew&&r.crew.length?`<p style="margin-top:.5rem"><b>Beteiligt:</b> ${r.crew.map(c => esc(c.name)).join(", ")}</p>`:""}</article>`;
 }
 
 function unfallKarte(a){
@@ -422,8 +427,15 @@ function renderAll(){
   $("#letzte").innerHTML = reports.slice(0,3).map(berichtKarte).join("") || `<div class="leer">Noch keine Einsatzberichte. Schreib den ersten unter „Einsatzberichte“.</div>`;
 
   // Berichte
+  const crewBox = $("#bCrew"), aktive = users.filter(u => u.active), sigC = aktive.map(u => u.id+"|"+u.name).join();
+  if(crewBox.dataset.sig !== sigC){
+    const gewaehlt = new Set([...crewBox.querySelectorAll("input:checked")].map(i => i.value));
+    crewBox.dataset.sig = sigC;
+    crewBox.innerHTML = aktive.map(u => `<label><input type="checkbox" value="${u.id}"><span>${esc(u.name)}${u.dienstnummer?` (${esc(u.dienstnummer)})`:""}</span></label>`).join("") || "<small>Keine aktiven Mitglieder.</small>";
+    crewBox.querySelectorAll("input").forEach(i => i.checked = gewaehlt.has(i.value));
+  }
   const q = $("#bSuche").value.trim().toLowerCase();
-  const treffer = reports.filter(r => !q || [r.title,r.location,r.type,r.authorName].join(" ").toLowerCase().includes(q));
+  const treffer = reports.filter(r => !q || [r.title,r.location,r.type,r.authorName,...(r.crew||[]).map(c => c.name)].join(" ").toLowerCase().includes(q));
   $("#bListe").innerHTML = treffer.map(berichtKarte).join("") || `<div class="leer">${q?"Kein Bericht passt zu deiner Suche.":"Noch keine Einsatzberichte."}</div>`;
 
   // Arbeitsunfälle
@@ -475,10 +487,12 @@ $("#pUser").onchange = () => {
 $("#bForm").onsubmit = async e => {
   e.preventDefault(); $("#bMsg").textContent = "";
   if($("#bEnde").value < $("#bDatum").value){$("#bMsg").textContent = "Das Einsatzende darf nicht vor dem Einsatzbeginn liegen.";return}
+  const crew = [...document.querySelectorAll("#bCrew input:checked")].map(i => ({uid:i.value, name:(users.find(x => x.id===i.value)||{}).name || ""}));
+  if(!crew.length){$("#bMsg").textContent = "Bitte mindestens ein beteiligtes Mitglied auswählen.";return}
   try{
     await addDoc(collection(db,"reports"),{
       title:$("#bTitel").value.trim(), type:$("#bArt").value, location:$("#bOrt").value.trim(),
-      date:$("#bDatum").value, endDate:$("#bEnde").value, narrative:$("#bText").value.trim(),
+      date:$("#bDatum").value, endDate:$("#bEnde").value, crew, narrative:$("#bText").value.trim(),
       authorUid:me.id, authorName:me.name, createdAt:serverTimestamp()
     });
     e.target.reset(); toast("Bericht gespeichert");
