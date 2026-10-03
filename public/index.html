@@ -94,18 +94,13 @@ th{background:var(--papier);font-weight:600}
   <div class="warn"></div>
   <div class="inhalt">
    <h1>Feuerwehr Wien</h1>
-   <p class="sub" id="authSub">Melde dich mit deinem Mitgliedskonto an.</p>
+   <p class="sub">Konten legt ein Admin der Feuerwehr an.</p>
    <form id="authForm">
-    <div id="regFelder" class="hidden">
-     <label for="aName">Name (IC)</label><input id="aName" autocomplete="name">
-     <label for="aDn">Dienstnummer</label><input id="aDn" placeholder="z. B. FW-104">
-    </div>
     <label for="aMail">E-Mail</label><input id="aMail" type="email" required autocomplete="email">
     <label for="aPw">Passwort</label><input id="aPw" type="password" required minlength="6" autocomplete="current-password">
     <div class="msg" id="authMsg" role="alert"></div>
     <button class="btn" id="authBtn" type="submit">Anmelden</button>
    </form>
-   <button class="link" id="authSwitch" type="button">Noch kein Konto? Registrieren</button>
   </div>
  </div>
 </section>
@@ -115,8 +110,8 @@ th{background:var(--papier);font-weight:600}
  <div class="karte-login">
   <div class="warn"></div>
   <div class="inhalt">
-   <h2>Dein Zugang wartet auf Freischaltung</h2>
-   <p class="sub">Ein Admin der Feuerwehr muss dein Konto bestätigen. Danach siehst du das Portal automatisch.</p>
+   <h2>Dein Zugang ist nicht aktiv</h2>
+   <p class="sub">Dein Konto ist gesperrt oder noch nicht freigeschaltet. Wende dich an einen Admin.</p>
    <button class="btn sek" data-act="logout" type="button">Abmelden</button>
   </div>
  </div>
@@ -188,7 +183,20 @@ th{background:var(--papier);font-weight:600}
 
   <!-- Verwaltung -->
   <section id="v-verwaltung" class="hidden">
-   <header><h2>Verwaltung</h2><p>Konten freischalten und Rollen vergeben.</p></header>
+   <header><h2>Verwaltung</h2><p>Konten anlegen, sperren und Rollen vergeben.</p></header>
+   <form class="panel" id="nForm">
+    <h3>Neues Mitglied anlegen</h3>
+    <div class="zeile2">
+     <div><label for="nName">Name (IC)</label><input id="nName" required maxlength="60"></div>
+     <div><label for="nDn">Dienstnummer</label><input id="nDn" required maxlength="20" placeholder="z. B. FW-104"></div>
+     <div><label for="nMail">E-Mail</label><input id="nMail" type="email" required></div>
+     <div><label for="nPw">Startpasswort</label><input id="nPw" type="text" required minlength="6" autocomplete="off"></div>
+     <div><label for="nRang">Rang</label><select id="nRang"></select></div>
+     <div><label for="nRolle">Rolle</label><select id="nRolle"><option value="member">Mitglied</option><option value="admin">Admin</option></select></div>
+    </div>
+    <div class="msg" id="nMsg" role="alert"></div>
+    <button class="btn" type="submit">Konto anlegen</button>
+   </form>
    <div class="tabelle"><table>
     <thead><tr><th>Name</th><th>Dienstnr.</th><th>Rang</th><th>Rolle</th><th>Zugang</th><th></th></tr></thead>
     <tbody id="uTab"></tbody>
@@ -218,6 +226,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const zweitAuth = getAuth(initializeApp(firebaseConfig, "zweit")); // nur zum Anlegen neuer Konten
 
 const RAENGE = ["Probefeuerwehrmann","Feuerwehrmann","Oberfeuerwehrmann","Hauptfeuerwehrmann","Löschmeister","Oberlöschmeister","Hauptlöschmeister","Brandmeister","Oberbrandmeister","Hauptbrandmeister","Brandinspektor","Oberbrandinspektor"];
 
@@ -226,7 +235,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const fmt = s => s ? new Date(s).toLocaleString("de-AT",{dateStyle:"medium",timeStyle:"short"}) : "";
 const fmtTs = t => t && t.toDate ? t.toDate().toLocaleDateString("de-AT",{dateStyle:"medium"}) : "gerade eben";
 
-let me = null, reports = [], promos = [], users = [], view = "start", registrieren = false;
+let me = null, reports = [], promos = [], users = [], view = "start";
 let userUnsub = null, dataUnsubs = [];
 
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),3200)}
@@ -237,30 +246,10 @@ function fehlertext(e){
 }
 
 /* ---------- Anmeldung ---------- */
-function authModus(reg){
-  registrieren = reg;
-  $("#regFelder").classList.toggle("hidden",!reg);
-  $("#authBtn").textContent = reg ? "Konto erstellen" : "Anmelden";
-  $("#authSwitch").textContent = reg ? "Schon ein Konto? Anmelden" : "Noch kein Konto? Registrieren";
-  $("#authSub").textContent = reg ? "Nach der Registrierung schaltet dich ein Admin frei." : "Melde dich mit deinem Mitgliedskonto an.";
-  $("#aPw").autocomplete = reg ? "new-password" : "current-password";
-  $("#authMsg").textContent = "";
-}
-$("#authSwitch").onclick = () => authModus(!registrieren);
 $("#authForm").onsubmit = async e => {
-  e.preventDefault();
-  const mail = $("#aMail").value.trim(), pw = $("#aPw").value;
-  $("#authMsg").textContent = "";
-  try{
-    if(registrieren){
-      const name = $("#aName").value.trim(), dn = $("#aDn").value.trim();
-      if(!name || !dn){$("#authMsg").textContent="Bitte Name und Dienstnummer ausfüllen.";return}
-      const c = await createUserWithEmailAndPassword(auth,mail,pw);
-      await setDoc(doc(db,"users",c.user.uid),{name,dienstnummer:dn,rank:RAENGE[0],role:"member",active:false,createdAt:serverTimestamp()});
-    }else{
-      await signInWithEmailAndPassword(auth,mail,pw);
-    }
-  }catch(err){$("#authMsg").textContent = fehlertext(err)}
+  e.preventDefault(); $("#authMsg").textContent = "";
+  try{ await signInWithEmailAndPassword(auth,$("#aMail").value.trim(),$("#aPw").value) }
+  catch(err){$("#authMsg").textContent = fehlertext(err)}
 };
 
 document.addEventListener("click", async e => {
@@ -343,6 +332,7 @@ function renderAll(){
     sel.innerHTML = users.filter(u => u.active).map(u => `<option value="${u.id}">${esc(u.name)} (${esc(u.rank)})</option>`).join("");
     if(alt) sel.value = alt;
     if(!$("#pRang").options.length) $("#pRang").innerHTML = RAENGE.map(r => `<option>${r}</option>`).join("");
+    if(!$("#nRang").options.length) $("#nRang").innerHTML = RAENGE.map(r => `<option>${r}</option>`).join("");
   }
   $("#pListe").innerHTML = promos.map(p => `<li><b>${esc(p.userName)}</b>: ${esc(p.from)} → <b>${esc(p.to)}</b><br><small>${esc(p.reason)} · durch ${esc(p.byName)} · ${fmtTs(p.createdAt)}</small></li>`).join("") || `<li class="leer">Noch keine Beförderungen eingetragen.</li>`;
 
@@ -377,6 +367,16 @@ $("#bForm").onsubmit = async e => {
     });
     e.target.reset(); toast("Bericht gespeichert");
   }catch(err){$("#bMsg").textContent = fehlertext(err)}
+};
+
+$("#nForm").onsubmit = async e => {
+  e.preventDefault(); $("#nMsg").textContent = "";
+  try{
+    const c = await createUserWithEmailAndPassword(zweitAuth,$("#nMail").value.trim(),$("#nPw").value);
+    await setDoc(doc(db,"users",c.user.uid),{name:$("#nName").value.trim(),dienstnummer:$("#nDn").value.trim(),rank:$("#nRang").value,role:$("#nRolle").value,active:true,createdAt:serverTimestamp()});
+    await signOut(zweitAuth);
+    e.target.reset(); toast("Konto angelegt");
+  }catch(err){$("#nMsg").textContent = fehlertext(err)}
 };
 
 $("#pForm").onsubmit = async e => {
