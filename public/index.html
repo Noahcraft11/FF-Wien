@@ -235,6 +235,29 @@ th{padding:.8rem .9rem}
 input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(200,32,43,.18)}
 ::selection{background:rgba(200,32,43,.28)}
 @media(max-width:800px){#app{grid-template-columns:1fr}.ng{display:none}.ich-kopf small{display:none}.uhr-leiste{display:none}nav button{padding:.7rem .8rem}nav button span{font-size:.9rem}main header h2{font-size:2.2rem}}
+
+/* ===== Design-Überarbeitung 3 ===== */
+body{background:radial-gradient(900px 420px at 72% -140px,rgba(200,32,43,.1),transparent 70%) top/100% 460px no-repeat,radial-gradient(rgba(127,127,127,.16) 1px,transparent 1.2px) 0 0/22px 22px,var(--bg)}
+main header.hero{position:relative;overflow:hidden;padding:2.1rem 2.3rem 2.4rem;border:0;border-radius:18px;color:#fff;background:radial-gradient(520px 260px at 100% 0%,rgba(200,32,43,.55),transparent 70%),linear-gradient(135deg,#1B1E23,#0C0E11);box-shadow:0 16px 40px rgba(16,24,40,.28)}
+main header.hero::before{display:none}
+main header.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:8px;background:repeating-linear-gradient(-45deg,var(--rot) 0 14px,#fff 14px 28px)}
+main header.hero h2{font-size:3.3rem;line-height:1}
+main header.hero p{margin-top:.5rem;color:#B9BDC4;font-size:1.1rem}
+.zahlen .zahl:nth-child(4n+2){border-top-color:#C27C0E}
+.zahlen .zahl:nth-child(4n+3){border-top-color:#2F6FDE}
+.zahlen .zahl:nth-child(4n+4){border-top-color:#1E7B4A}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1.1rem}
+.chip{display:inline-flex;align-items:center;gap:.5rem;padding:.38rem .9rem;border:1.5px solid var(--border-strong);border-radius:999px;background:var(--surface);font-size:.88rem;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s}
+.chip i{width:.65em;height:.65em;border-radius:50%;background:var(--ac)}
+.chip:hover{background:var(--hover)}
+.chip.an{background:var(--ac);border-color:var(--ac);color:#fff}.chip.an i{background:#fff}
+label{color:var(--muted);font-size:.86rem;margin:1.05rem 0 .3rem}
+input,select,textarea{box-shadow:inset 0 1px 2px rgba(16,24,40,.06)}
+.panel{border-radius:16px}
+.bericht{border-radius:14px}
+#toast{display:flex;align-items:center;padding:.8rem 1.2rem}
+#toast::before{content:"";width:.6em;height:.6em;margin-right:.7rem;border-radius:50%;background:#2BD576;box-shadow:0 0 7px #2BD576}
+@media(max-width:800px){main header.hero{padding:1.4rem 1.3rem 1.7rem}main header.hero h2{font-size:2.3rem}}
 </style>
 </head>
 <body>
@@ -315,7 +338,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(200,32,43,.18)
   <div class="uhr-leiste"><span id="uhr"></span></div>
   <!-- Übersicht -->
   <section id="v-start">
-   <header><h2>Übersicht</h2><p>Aktueller Stand der Feuerwehr.</p></header>
+   <header class="hero"><h2 id="gruss"></h2><p id="grussSub"></p></header>
    <div class="led-tafel" role="status" aria-label="Aktuelle Meldungen"><div class="led-text" id="ledText"></div></div>
    <div class="zahlen" id="zahlen"></div>
    <h3 style="margin-bottom:.7rem">Ankündigungen</h3>
@@ -344,6 +367,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(200,32,43,.18)
     <div class="msg" id="bMsg" role="alert"></div>
     <button class="btn" type="submit">Bericht speichern</button>
    </form>
+   <div id="bChips" class="chips" role="group" aria-label="Nach Einsatzart filtern"></div>
    <label for="bSuche" style="margin-top:0">Berichte durchsuchen</label>
    <input id="bSuche" type="search" placeholder="Titel, Ort, Art, Verfasser oder Beteiligte" style="margin-bottom:1rem">
    <div id="bListe"></div>
@@ -668,6 +692,7 @@ const BEREICHE = [
 
 // Einzelrechte, die ein Admin pro Mitglied vergeben kann (users/{uid}.rights.<key>; "warn" liegt auf users/{uid}.canWarn).
 // def = Standard, solange der Admin nichts eingestellt hat. Admins dürfen immer alles.
+let artFilter = "";
 const ART_FARBE = {"Brand":"#D1242F","Technischer Einsatz":"#C27C0E","Verkehrsunfall":"#2F6FDE","Brandmeldealarm":"#E8590C","Sonstiges":"#6B7280"};
 const RECHTE = [
   {key:"warn",      label:"Verwarnen",                    def:false},
@@ -864,7 +889,7 @@ function renderAll(){
     crewBox.querySelectorAll("input").forEach(i => i.checked = gewaehlt.has(i.value));
   }
   const q = $("#bSuche").value.trim().toLowerCase();
-  const treffer = reports.filter(r => !q || [r.number,r.title,r.location,r.type,r.authorName,...(r.crew||[]).map(c => c.name)].join(" ").toLowerCase().includes(q));
+  const treffer = reports.filter(r => !artFilter || r.type===artFilter).filter(r => !q || [r.number,r.title,r.location,r.type,r.authorName,...(r.crew||[]).map(c => c.name)].join(" ").toLowerCase().includes(q));
   $("#bListe").innerHTML = treffer.map(berichtKarte).join("") || `<div class="leer">${q?"Kein Bericht passt zu deiner Suche.":"Noch keine Einsatzberichte."}</div>`;
 
   // Arbeitsunfälle
@@ -972,6 +997,10 @@ function renderAll(){
 }
 
 function renderNeu(){
+  const std = new Date().getHours();
+  $("#gruss").textContent = `${std < 11 ? "Guten Morgen" : std < 18 ? "Guten Tag" : "Guten Abend"}, ${me.name.split(" ")[0]}`;
+  $("#grussSub").textContent = [me.rank, me.dienstnummer].filter(Boolean).join(" · ");
+  $("#bChips").innerHTML = ["", ...Object.keys(ART_FARBE)].map(k => `<button type="button" class="chip${artFilter===k?" an":""}" data-art="${k}" style="--ac:${k?ART_FARBE[k]:"var(--tag)"}"><i></i>${k||"Alle"}</button>`).join("");
   const adm = istAdmin(), jetzt = new Date().toISOString().slice(0,16);
   const loeschen = (act,id) => adm ? `<button class="btn gefahr klein" data-act="${act}" data-id="${id}" type="button">Löschen</button>` : "";
   [["#anForm","announce"],["#tmForm","events"],["#dkForm","docs"],["#bForm","reports"],["#aForm","accidents"]].forEach(([x,k]) => $(x).classList.toggle("hidden",!kann(k)));
@@ -1167,6 +1196,7 @@ $("#pForm").onsubmit = async e => {
   }catch(err){$("#pMsg").textContent = fehlertext(err)}
 };
 
+document.addEventListener("click", e => { const c = e.target.closest("[data-art]"); if(!c) return; artFilter = c.dataset.art; renderAll(); });
 const uhr = () => { const d = new Date(); $("#uhr").textContent = d.toLocaleDateString("de-AT",{weekday:"short",day:"2-digit",month:"2-digit"}) + "  " + d.toLocaleTimeString("de-AT"); };
 uhr(); setInterval(uhr, 1000);
 
