@@ -71,6 +71,10 @@ th{background:var(--papier);font-weight:600}
 .status{font-weight:600}.status.an{color:var(--ok)}.status.aus{color:var(--rot-d)}
 .leer{color:var(--muted);padding:1.2rem;background:#fff;border:1px dashed #B8BCC2}
 .log li{padding:.55rem 0;border-bottom:1px solid var(--nebel)}
+.perm{display:flex;flex-direction:column;gap:.15rem;min-width:150px}
+.perm label{display:flex;align-items:center;gap:.45rem;margin:0;font-weight:500;font-size:.88rem;cursor:pointer}
+.perm input[type=checkbox]{width:auto;padding:0;margin:0}
+.perm input:disabled+span{color:var(--muted)}
 .log{list-style:none;margin:0;padding:0}
 #toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);background:var(--anth);color:#fff;padding:.7rem 1.1rem;border-radius:3px;z-index:9}
 
@@ -137,7 +141,7 @@ th{background:var(--papier);font-weight:600}
   <section id="v-start">
    <header><h2>Übersicht</h2><p>Aktueller Stand der Feuerwehr.</p></header>
    <div class="zahlen" id="zahlen"></div>
-   <h3 style="margin-bottom:.7rem">Letzte Einsatzberichte</h3>
+   <h3 style="margin-bottom:.7rem" id="letzteKopf">Letzte Einsatzberichte</h3>
    <div id="letzte"></div>
   </section>
 
@@ -183,7 +187,7 @@ th{background:var(--papier);font-weight:600}
 
   <!-- Verwaltung -->
   <section id="v-verwaltung" class="hidden">
-   <header><h2>Verwaltung</h2><p>Konten anlegen, sperren und Rollen vergeben.</p></header>
+   <header><h2>Verwaltung</h2><p>Konten anlegen, sperren, Rollen vergeben und Bereiche pro Mitglied festlegen.</p></header>
    <form class="panel" id="nForm">
     <h3>Neues Mitglied anlegen</h3>
     <div class="zeile2">
@@ -208,7 +212,7 @@ th{background:var(--papier);font-weight:600}
     <div id="rListe" style="margin-top:1rem"></div>
    </form>
    <div class="tabelle"><table>
-    <thead><tr><th>Name</th><th>Dienstnr.</th><th>Rang</th><th>Rolle</th><th>Zugang</th><th></th></tr></thead>
+    <thead><tr><th>Name</th><th>Dienstnr.</th><th>Rang</th><th>Rolle</th><th>Zugang</th><th>Sichtbare Bereiche</th><th></th></tr></thead>
     <tbody id="uTab"></tbody>
    </table></div>
   </section>
@@ -248,7 +252,14 @@ const fmtTs = t => t && t.toDate ? t.toDate().toLocaleDateString("de-AT",{dateSt
 
 let me = null, reports = [], promos = [], users = [], rollen = [], view = "start";
 const alleRollen = () => [{name:"Mitglied",admin:false},{name:"Admin",admin:true},...rollen];
-let userUnsub = null, dataUnsubs = [];
+let userUnsub = null, dataUnsubs = [], dataSig = "";
+
+// Bereiche, die pro Mitglied ein-/ausgeblendet werden können (Übersicht und Verwaltung sind nicht dabei).
+// key = Feldname in users/{uid}.permissions und in firestore.rules, view = data-view der Navigation.
+const BEREICHE = [
+  {key:"reports",    view:"berichte",       label:"Einsatzberichte"},
+  {key:"promotions", view:"befoerderungen", label:"Beförderungen"}
+];
 
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),3200)}
 function zeige(was){["auth","pending","app"].forEach(id=>$("#"+id).classList.toggle("hidden",id!==was))}
@@ -283,6 +294,11 @@ document.addEventListener("change", async e => {
   try{await updateDoc(doc(db,"users",sel.dataset.uid),{funktion:r.name,role:r.admin?"admin":"member"}); toast("Rolle geändert")}
   catch(err){toast(fehlertext(err))}
 });
+document.addEventListener("change", async e => {
+  const cb = e.target.closest(".perm-cb"); if(!cb) return;
+  try{await updateDoc(doc(db,"users",cb.dataset.uid),{["permissions."+cb.dataset.key]:cb.checked}); toast("Bereiche gespeichert")}
+  catch(err){cb.checked=!cb.checked; toast(fehlertext(err))}
+});
 $("#rForm").onsubmit = async e => {
   e.preventDefault(); $("#rMsg").textContent = "";
   const name = $("#rName").value.trim();
@@ -303,17 +319,22 @@ onAuthStateChanged(auth, user => {
 });
 
 function startData(){
-  if(dataUnsubs.length) return;
+  // Nur Daten abonnieren, die das Mitglied sehen darf; bei geänderten Rechten neu starten.
+  const sig = BEREICHE.map(b => darf(b.key)).join();
+  if(dataUnsubs.length && sig === dataSig) return;
+  stopData(); dataSig = sig;
   const f = err => toast(fehlertext(err));
   dataUnsubs.push(
-    onSnapshot(query(collection(db,"reports"),orderBy("date","desc"),limit(100)), s => {reports=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f),
-    onSnapshot(query(collection(db,"promotions"),orderBy("createdAt","desc"),limit(100)), s => {promos=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f),
     onSnapshot(query(collection(db,"users"),orderBy("name")), s => {users=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f),
     onSnapshot(query(collection(db,"roles"),orderBy("name")), s => {rollen=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f)
   );
+  if(darf("reports")) dataUnsubs.push(onSnapshot(query(collection(db,"reports"),orderBy("date","desc"),limit(100)), s => {reports=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f));
+  if(darf("promotions")) dataUnsubs.push(onSnapshot(query(collection(db,"promotions"),orderBy("createdAt","desc"),limit(100)), s => {promos=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f));
 }
-function stopData(){dataUnsubs.forEach(u=>u());dataUnsubs=[];reports=[];promos=[];users=[];rollen=[]}
+function stopData(){dataUnsubs.forEach(u=>u());dataUnsubs=[];dataSig="";reports=[];promos=[];users=[];rollen=[]}
 const istAdmin = () => me && me.role === "admin";
+// Admins sehen alles. Sonst zählt permissions[key]; fehlt der Eintrag, ist der Bereich erlaubt.
+const darf = key => !!me && (me.role === "admin" || !me.permissions || me.permissions[key] !== false);
 
 /* ---------- Navigation ---------- */
 $("#nav").onclick = e => {
@@ -334,19 +355,22 @@ function renderAll(){
   $("#ichName").textContent = me.name;
   $("#ichRang").textContent = `${me.rank} · ${me.dienstnummer}`;
   $("#navAdmin").classList.toggle("hidden",!istAdmin());
+  BEREICHE.forEach(b => document.querySelector(`#nav [data-view="${b.view}"]`).classList.toggle("hidden",!darf(b.key)));
   if(view==="verwaltung" && !istAdmin()) view = "start";
+  const sperre = BEREICHE.find(b => b.view===view && !darf(b.key));
+  if(sperre) view = "start";
   document.querySelectorAll("#nav [data-view]").forEach(b => b.classList.toggle("aktiv",b.dataset.view===view));
   ["start","berichte","befoerderungen","verwaltung"].forEach(v => $("#v-"+v).classList.toggle("hidden",v!==view));
 
   // Übersicht
   const monat = new Date().toISOString().slice(0,7);
-  const zahlen = [
-    [reports.length,"Einsatzberichte"],
-    [reports.filter(r => (r.date||"").startsWith(monat)).length,"Einsätze in diesem Monat"],
-    [users.filter(u => u.active).length,"Aktive Mitglieder"]
-  ];
+  const zahlen = [];
+  if(darf("reports")) zahlen.push([reports.length,"Einsatzberichte"],[reports.filter(r => (r.date||"").startsWith(monat)).length,"Einsätze in diesem Monat"]);
+  zahlen.push([users.filter(u => u.active).length,"Aktive Mitglieder"]);
   if(istAdmin()) zahlen.push([users.filter(u => !u.active).length,"Offene Freischaltungen"]);
   $("#zahlen").innerHTML = zahlen.map(z => `<div class="zahl"><b>${z[0]}</b><span>${z[1]}</span></div>`).join("");
+  $("#letzteKopf").classList.toggle("hidden",!darf("reports"));
+  $("#letzte").classList.toggle("hidden",!darf("reports"));
   $("#letzte").innerHTML = reports.slice(0,3).map(berichtKarte).join("") || `<div class="leer">Noch keine Einsatzberichte. Schreib den ersten unter „Einsatzberichte“.</div>`;
 
   // Berichte
@@ -377,6 +401,8 @@ function renderAll(){
       return `<tr><td>${esc(u.name)}${u.username?`<br><small>${esc(u.username)}</small>`:""}</td><td>${esc(u.dienstnummer)}</td><td>${esc(u.rank)}</td>
         <td>${ich?esc(cur):`<select class="rolle-sel" data-uid="${u.id}" aria-label="Rolle von ${esc(u.name)}">${opts}</select>`}</td>
         <td><span class="status ${u.active?"an":"aus"}">${u.active?"Aktiv":"Gesperrt"}</span></td>
+        <td><div class="perm">${BEREICHE.map(b => { const admin = u.role==="admin", an = admin || !u.permissions || u.permissions[b.key] !== false;
+          return `<label><input type="checkbox" class="perm-cb" data-uid="${u.id}" data-key="${b.key}"${an?" checked":""}${admin?" disabled":""}><span>${esc(b.label)}</span></label>`; }).join("")}${u.role==="admin"?"<small>Admins sehen alles.</small>":""}</div></td>
         <td>${ich?"":`<button class="btn sek klein" data-act="zugang" data-id="${u.id}" type="button">${u.active?"Sperren":"Freischalten"}</button>
         <button class="btn gefahr klein" data-act="mitglied-loeschen" data-id="${u.id}" type="button">Löschen</button>`}</td></tr>`;
     }).join("");
