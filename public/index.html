@@ -205,11 +205,15 @@ import {getFirestore,doc,setDoc,addDoc,deleteDoc,updateDoc,collection,query,orde
 
 // 1) Trag hier die Werte aus der Firebase-Konsole ein (Projekteinstellungen → Web-App)
 const firebaseConfig = {
-  apiKey: "DEIN_API_KEY",
-  authDomain: "DEIN_PROJEKT.firebaseapp.com",
-  projectId: "DEIN_PROJEKT",
-  appId: "DEINE_APP_ID"
+  apiKey: "AIzaSyAfTWOOe5HSvWOX2h7sIwhehZ4mAJE9Wvs",
+  authDomain: "ff-wien.firebaseapp.com",
+  projectId: "ff-wien",
+  storageBucket: "ff-wien.firebasestorage.app",
+  messagingSenderId: "39872535325",
+  appId: "1:39872535325:web:a2933c8d0ea9fe31a19ff4",
+  measurementId: "G-RKM7JGYN9E"
 };
+
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
