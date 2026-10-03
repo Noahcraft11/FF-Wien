@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="de-AT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feuerwehr Wien · Mitgliederportal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--rot:#C8202B;--rot-d:#9E1720;--anth:#22252A;--nebel:#E4E6E9;--papier:#F6F6F4;--gelb:#F4C300;--text:#1B1D21;--muted:#646A72;--ok:#1E7B4A;--kopf:"Barlow Condensed","Arial Narrow",sans-serif;--fließ:"Barlow",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.5 var(--fließ);color:var(--text);background:var(--papier)}
+h1,h2,h3{font-family:var(--kopf);margin:0;line-height:1.1}
+h1{font-size:2.4rem}h2{font-size:1.9rem}h3{font-size:1.25rem}
+:focus-visible{outline:3px solid var(--anth);outline-offset:2px}
+.hidden{display:none!important}
+.warn{height:12px;background:repeating-linear-gradient(-45deg,var(--rot) 0 14px,#fff 14px 28px)}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea{width:100%;padding:.6rem .7rem;border:1.5px solid #B8BCC2;border-radius:3px;background:#fff}
+label{display:block;font-weight:600;font-size:.9rem;margin:.9rem 0 .25rem}
+.btn{background:var(--rot);color:#fff;border:0;border-radius:3px;padding:.65rem 1.1rem;font-weight:600;cursor:pointer}
+.btn:hover{background:var(--rot-d)}
+.btn.sek{background:#fff;color:var(--text);border:1.5px solid #B8BCC2}
+.btn.sek:hover{background:var(--nebel)}
+.btn.klein{padding:.3rem .7rem;font-size:.85rem}
+.btn.gefahr{background:#fff;color:var(--rot);border:1.5px solid var(--rot)}
+.msg{color:var(--rot-d);font-size:.9rem;min-height:1.3rem;margin-top:.6rem}
+
+/* Anmeldung */
+#auth,#pending{min-height:100vh;display:grid;place-items:center;padding:1rem;background:var(--anth)}
+.karte-login{background:var(--papier);width:100%;max-width:420px;border-radius:4px;overflow:hidden}
+.karte-login .inhalt{padding:1.6rem 1.6rem 1.8rem}
+.karte-login p.sub{color:var(--muted);margin:.3rem 0 .5rem}
+.link{background:none;border:0;color:var(--rot-d);text-decoration:underline;cursor:pointer;padding:0;margin-top:1rem}
+
+/* App-Rahmen */
+#app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+aside{background:var(--anth);color:#fff;display:flex;flex-direction:column}
+aside .marke{padding:1.3rem 1.2rem 1rem}
+aside .marke b{font:700 1.5rem/1 var(--kopf);display:block}
+aside .marke span{color:#B9BDC4;font-size:.85rem}
+nav{display:flex;flex-direction:column;padding:.5rem 0;flex:1}
+nav button{background:none;border:0;color:#D9DCE0;text-align:left;padding:.8rem 1.2rem;cursor:pointer;border-left:5px solid transparent;font-weight:500}
+nav button:hover{background:#2E3238}
+nav button.aktiv{color:#fff;border-left-color:var(--rot);background:#2E3238}
+aside :focus-visible{outline-color:var(--gelb)}
+.ich{padding:1rem 1.2rem;border-top:1px solid #3A3F46;font-size:.9rem}
+.ich small{display:block;color:#B9BDC4}
+.ich button{margin-top:.6rem}
+main{padding:1.8rem clamp(1rem,3vw,2.5rem) 3rem;max-width:1100px;width:100%}
+main header{margin-bottom:1.3rem}
+main header p{margin:.2rem 0 0;color:var(--muted)}
+
+/* Inhalt */
+.zahlen{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;margin-bottom:2rem}
+.zahl{background:#fff;border-top:5px solid var(--rot);padding:.9rem 1rem}
+.zahl b{font:700 2.6rem/1 var(--kopf);display:block}
+.zahl span{color:var(--muted);font-size:.9rem}
+.panel{background:#fff;border:1px solid var(--nebel);padding:1.2rem 1.3rem;margin-bottom:1.5rem}
+.zeile2{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem}
+.bericht{background:#fff;border:1px solid var(--nebel);border-left:6px solid var(--rot);padding:.9rem 1.1rem;margin-bottom:.9rem}
+.bericht .kopf{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start}
+.bericht .meta{color:var(--muted);font-size:.88rem;margin:.2rem 0 .5rem}
+.bericht p{margin:0;white-space:pre-wrap}
+.tag{display:inline-block;background:var(--anth);color:#fff;font-size:.78rem;font-weight:600;padding:.1rem .5rem;border-radius:2px;margin-right:.4rem}
+.tabelle{overflow-x:auto;background:#fff;border:1px solid var(--nebel)}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid var(--nebel);font-size:.95rem}
+th{background:var(--papier);font-weight:600}
+.status{font-weight:600}.status.an{color:var(--ok)}.status.aus{color:var(--rot-d)}
+.leer{color:var(--muted);padding:1.2rem;background:#fff;border:1px dashed #B8BCC2}
+.log li{padding:.55rem 0;border-bottom:1px solid var(--nebel)}
+.log{list-style:none;margin:0;padding:0}
+#toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);background:var(--anth);color:#fff;padding:.7rem 1.1rem;border-radius:3px;z-index:9}
+
+@media(max-width:800px){
+ #app{grid-template-columns:1fr}
+ aside{position:sticky;top:0;z-index:5}
+ nav{flex-direction:row;overflow-x:auto;padding:0}
+ nav button{border-left:0;border-bottom:4px solid transparent;white-space:nowrap}
+ nav button.aktiv{border-bottom-color:var(--rot)}
+ .ich{display:flex;justify-content:space-between;align-items:center;padding:.5rem 1rem}
+ .ich button{margin:0}
+ .zeile2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- Anmeldung -->
+<section id="auth" class="hidden">
+ <div class="karte-login">
+  <div class="warn"></div>
+  <div class="inhalt">
+   <h1>Feuerwehr Wien</h1>
+   <p class="sub" id="authSub">Melde dich mit deinem Mitgliedskonto an.</p>
+   <form id="authForm">
+    <div id="regFelder" class="hidden">
+     <label for="aName">Name (IC)</label><input id="aName" autocomplete="name">
+     <label for="aDn">Dienstnummer</label><input id="aDn" placeholder="z. B. FW-104">
+    </div>
+    <label for="aMail">E-Mail</label><input id="aMail" type="email" required autocomplete="email">
+    <label for="aPw">Passwort</label><input id="aPw" type="password" required minlength="6" autocomplete="current-password">
+    <div class="msg" id="authMsg" role="alert"></div>
+    <button class="btn" id="authBtn" type="submit">Anmelden</button>
+   </form>
+   <button class="link" id="authSwitch" type="button">Noch kein Konto? Registrieren</button>
+  </div>
+ </div>
+</section>
+
+<!-- Warten auf Freischaltung -->
+<section id="pending" class="hidden">
+ <div class="karte-login">
+  <div class="warn"></div>
+  <div class="inhalt">
+   <h2>Dein Zugang wartet auf Freischaltung</h2>
+   <p class="sub">Ein Admin der Feuerwehr muss dein Konto bestätigen. Danach siehst du das Portal automatisch.</p>
+   <button class="btn sek" data-act="logout" type="button">Abmelden</button>
+  </div>
+ </div>
+</section>
+
+<!-- Portal -->
+<div id="app" class="hidden">
+ <aside>
+  <div class="warn"></div>
+  <div class="marke"><b>Feuerwehr Wien</b><span>Mitgliederportal</span></div>
+  <nav id="nav">
+   <button data-view="start" class="aktiv">Übersicht</button>
+   <button data-view="berichte">Einsatzberichte</button>
+   <button data-view="befoerderungen">Beförderungen</button>
+   <button data-view="verwaltung" id="navAdmin" class="hidden">Verwaltung</button>
+  </nav>
+  <div class="ich"><b id="ichName"></b><small id="ichRang"></small>
+   <button class="btn sek klein" data-act="logout" type="button">Abmelden</button></div>
+ </aside>
+
+ <main>
+  <!-- Übersicht -->
+  <section id="v-start">
+   <header><h2>Übersicht</h2><p>Aktueller Stand der Feuerwehr.</p></header>
+   <div class="zahlen" id="zahlen"></div>
+   <h3 style="margin-bottom:.7rem">Letzte Einsatzberichte</h3>
+   <div id="letzte"></div>
+  </section>
+
+  <!-- Einsatzberichte -->
+  <section id="v-berichte" class="hidden">
+   <header><h2>Einsatzberichte</h2><p>Berichte schreiben und nachlesen.</p></header>
+   <form class="panel" id="bForm">
+    <h3>Neuer Bericht</h3>
+    <div class="zeile2">
+     <div><label for="bTitel">Titel</label><input id="bTitel" required maxlength="100"></div>
+     <div><label for="bArt">Art des Einsatzes</label>
+      <select id="bArt"><option>Brand</option><option>Technischer Einsatz</option><option>Verkehrsunfall</option><option>Brandmeldealarm</option><option>Sonstiges</option></select></div>
+     <div><label for="bOrt">Einsatzort</label><input id="bOrt" required maxlength="100"></div>
+     <div><label for="bDatum">Datum und Uhrzeit</label><input id="bDatum" type="datetime-local" required></div>
+    </div>
+    <label for="bText">Ablauf des Einsatzes</label>
+    <textarea id="bText" rows="5" required maxlength="3000"></textarea>
+    <div class="msg" id="bMsg" role="alert"></div>
+    <button class="btn" type="submit">Bericht speichern</button>
+   </form>
+   <label for="bSuche" style="margin-top:0">Berichte durchsuchen</label>
+   <input id="bSuche" type="search" placeholder="Titel, Ort, Art oder Verfasser" style="margin-bottom:1rem">
+   <div id="bListe"></div>
+  </section>
+
+  <!-- Beförderungen -->
+  <section id="v-befoerderungen" class="hidden">
+   <header><h2>Beförderungen</h2><p>Alle Rangänderungen im Überblick.</p></header>
+   <form class="panel hidden" id="pForm">
+    <h3>Mitglied befördern</h3>
+    <div class="zeile2">
+     <div><label for="pUser">Mitglied</label><select id="pUser"></select></div>
+     <div><label for="pRang">Neuer Rang</label><select id="pRang"></select></div>
+    </div>
+    <label for="pGrund">Begründung</label>
+    <input id="pGrund" required maxlength="200" placeholder="z. B. Ausbildung abgeschlossen">
+    <div class="msg" id="pMsg" role="alert"></div>
+    <button class="btn" type="submit">Rang ändern</button>
+   </form>
+   <h3 style="margin-bottom:.6rem">Verlauf</h3>
+   <ul class="log panel" id="pListe"></ul>
+  </section>
+
+  <!-- Verwaltung -->
+  <section id="v-verwaltung" class="hidden">
+   <header><h2>Verwaltung</h2><p>Konten freischalten und Rollen vergeben.</p></header>
+   <div class="tabelle"><table>
+    <thead><tr><th>Name</th><th>Dienstnr.</th><th>Rang</th><th>Rolle</th><th>Zugang</th><th></th></tr></thead>
+    <tbody id="uTab"></tbody>
+   </table></div>
+  </section>
+ </main>
+</div>
+<div id="toast" class="hidden" role="status"></div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,doc,setDoc,addDoc,deleteDoc,updateDoc,collection,query,orderBy,limit,onSnapshot,writeBatch,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// 1) Trag hier die Werte aus der Firebase-Konsole ein (Projekteinstellungen → Web-App)
+const firebaseConfig = {
+  apiKey: "DEIN_API_KEY",
+  authDomain: "DEIN_PROJEKT.firebaseapp.com",
+  projectId: "DEIN_PROJEKT",
+  appId: "DEINE_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const RAENGE = ["Probefeuerwehrmann","Feuerwehrmann","Oberfeuerwehrmann","Hauptfeuerwehrmann","Löschmeister","Oberlöschmeister","Hauptlöschmeister","Brandmeister","Oberbrandmeister","Hauptbrandmeister","Brandinspektor","Oberbrandinspektor"];
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = s => s ? new Date(s).toLocaleString("de-AT",{dateStyle:"medium",timeStyle:"short"}) : "";
+const fmtTs = t => t && t.toDate ? t.toDate().toLocaleDateString("de-AT",{dateStyle:"medium"}) : "gerade eben";
+
+let me = null, reports = [], promos = [], users = [], view = "start", registrieren = false;
+let userUnsub = null, dataUnsubs = [];
+
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),3200)}
+function zeige(was){["auth","pending","app"].forEach(id=>$("#"+id).classList.toggle("hidden",id!==was))}
+function fehlertext(e){
+  const m={"auth/invalid-credential":"E-Mail oder Passwort stimmt nicht.","auth/email-already-in-use":"Diese E-Mail ist schon registriert.","auth/weak-password":"Das Passwort braucht mindestens 6 Zeichen.","auth/invalid-email":"Die E-Mail-Adresse ist ungültig.","auth/too-many-requests":"Zu viele Versuche. Bitte warte kurz.","permission-denied":"Dafür fehlt dir die Berechtigung."};
+  return m[e.code] || "Das hat nicht geklappt. Bitte versuche es nochmal.";
+}
+
+/* ---------- Anmeldung ---------- */
+function authModus(reg){
+  registrieren = reg;
+  $("#regFelder").classList.toggle("hidden",!reg);
+  $("#authBtn").textContent = reg ? "Konto erstellen" : "Anmelden";
+  $("#authSwitch").textContent = reg ? "Schon ein Konto? Anmelden" : "Noch kein Konto? Registrieren";
+  $("#authSub").textContent = reg ? "Nach der Registrierung schaltet dich ein Admin frei." : "Melde dich mit deinem Mitgliedskonto an.";
+  $("#aPw").autocomplete = reg ? "new-password" : "current-password";
+  $("#authMsg").textContent = "";
+}
+$("#authSwitch").onclick = () => authModus(!registrieren);
+$("#authForm").onsubmit = async e => {
+  e.preventDefault();
+  const mail = $("#aMail").value.trim(), pw = $("#aPw").value;
+  $("#authMsg").textContent = "";
+  try{
+    if(registrieren){
+      const name = $("#aName").value.trim(), dn = $("#aDn").value.trim();
+      if(!name || !dn){$("#authMsg").textContent="Bitte Name und Dienstnummer ausfüllen.";return}
+      const c = await createUserWithEmailAndPassword(auth,mail,pw);
+      await setDoc(doc(db,"users",c.user.uid),{name,dienstnummer:dn,rank:RAENGE[0],role:"member",active:false,createdAt:serverTimestamp()});
+    }else{
+      await signInWithEmailAndPassword(auth,mail,pw);
+    }
+  }catch(err){$("#authMsg").textContent = fehlertext(err)}
+};
+
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"); if(!b) return;
+  const act = b.dataset.act, id = b.dataset.id;
+  try{
+    if(act==="logout") await signOut(auth);
+    if(act==="zugang"){const u=users.find(x=>x.id===id); await updateDoc(doc(db,"users",id),{active:!u.active}); toast(u.active?"Zugang gesperrt":"Zugang freigeschaltet")}
+    if(act==="rolle"){const u=users.find(x=>x.id===id); await updateDoc(doc(db,"users",id),{role:u.role==="admin"?"member":"admin"}); toast("Rolle geändert")}
+    if(act==="loeschen" && confirm("Diesen Bericht endgültig löschen?")){await deleteDoc(doc(db,"reports",id)); toast("Bericht gelöscht")}
+  }catch(err){toast(fehlertext(err))}
+});
+
+/* ---------- Sitzung & Daten ---------- */
+onAuthStateChanged(auth, user => {
+  userUnsub && userUnsub(); userUnsub = null; stopData(); me = null;
+  if(!user){zeige("auth");return}
+  userUnsub = onSnapshot(doc(db,"users",user.uid), s => {
+    me = s.exists() ? {id:s.id,...s.data()} : null;
+    if(!me || !me.active){stopData();zeige("pending");return}
+    zeige("app"); startData(); renderAll();
+  }, err => toast(fehlertext(err)));
+});
+
+function startData(){
+  if(dataUnsubs.length) return;
+  const f = err => toast(fehlertext(err));
+  dataUnsubs.push(
+    onSnapshot(query(collection(db,"reports"),orderBy("date","desc"),limit(100)), s => {reports=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f),
+    onSnapshot(query(collection(db,"promotions"),orderBy("createdAt","desc"),limit(100)), s => {promos=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f),
+    onSnapshot(query(collection(db,"users"),orderBy("name")), s => {users=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f)
+  );
+}
+function stopData(){dataUnsubs.forEach(u=>u());dataUnsubs=[];reports=[];promos=[];users=[]}
+const istAdmin = () => me && me.role === "admin";
+
+/* ---------- Navigation ---------- */
+$("#nav").onclick = e => {
+  const b = e.target.closest("[data-view]"); if(!b) return;
+  view = b.dataset.view; renderAll();
+};
+
+/* ---------- Anzeige ---------- */
+function berichtKarte(r){
+  return `<article class="bericht"><div class="kopf"><h3>${esc(r.title)}</h3>
+    ${istAdmin()?`<button class="btn gefahr klein" data-act="loeschen" data-id="${r.id}" type="button">Löschen</button>`:""}</div>
+    <div class="meta"><span class="tag">${esc(r.type)}</span>${esc(r.location)} · ${fmt(r.date)} · ${esc(r.authorName)}</div>
+    <p>${esc(r.narrative)}</p></article>`;
+}
+
+function renderAll(){
+  if(!me || !me.active) return;
+  $("#ichName").textContent = me.name;
+  $("#ichRang").textContent = `${me.rank} · ${me.dienstnummer}`;
+  $("#navAdmin").classList.toggle("hidden",!istAdmin());
+  if(view==="verwaltung" && !istAdmin()) view = "start";
+  document.querySelectorAll("#nav [data-view]").forEach(b => b.classList.toggle("aktiv",b.dataset.view===view));
+  ["start","berichte","befoerderungen","verwaltung"].forEach(v => $("#v-"+v).classList.toggle("hidden",v!==view));
+
+  // Übersicht
+  const monat = new Date().toISOString().slice(0,7);
+  const zahlen = [
+    [reports.length,"Einsatzberichte"],
+    [reports.filter(r => (r.date||"").startsWith(monat)).length,"Einsätze in diesem Monat"],
+    [users.filter(u => u.active).length,"Aktive Mitglieder"]
+  ];
+  if(istAdmin()) zahlen.push([users.filter(u => !u.active).length,"Offene Freischaltungen"]);
+  $("#zahlen").innerHTML = zahlen.map(z => `<div class="zahl"><b>${z[0]}</b><span>${z[1]}</span></div>`).join("");
+  $("#letzte").innerHTML = reports.slice(0,3).map(berichtKarte).join("") || `<div class="leer">Noch keine Einsatzberichte. Schreib den ersten unter „Einsatzberichte“.</div>`;
+
+  // Berichte
+  const q = $("#bSuche").value.trim().toLowerCase();
+  const treffer = reports.filter(r => !q || [r.title,r.location,r.type,r.authorName].join(" ").toLowerCase().includes(q));
+  $("#bListe").innerHTML = treffer.map(berichtKarte).join("") || `<div class="leer">${q?"Kein Bericht passt zu deiner Suche.":"Noch keine Einsatzberichte."}</div>`;
+
+  // Beförderungen
+  $("#pForm").classList.toggle("hidden",!istAdmin());
+  if(istAdmin()){
+    const sel = $("#pUser"), alt = sel.value;
+    sel.innerHTML = users.filter(u => u.active).map(u => `<option value="${u.id}">${esc(u.name)} (${esc(u.rank)})</option>`).join("");
+    if(alt) sel.value = alt;
+    if(!$("#pRang").options.length) $("#pRang").innerHTML = RAENGE.map(r => `<option>${r}</option>`).join("");
+  }
+  $("#pListe").innerHTML = promos.map(p => `<li><b>${esc(p.userName)}</b>: ${esc(p.from)} → <b>${esc(p.to)}</b><br><small>${esc(p.reason)} · durch ${esc(p.byName)} · ${fmtTs(p.createdAt)}</small></li>`).join("") || `<li class="leer">Noch keine Beförderungen eingetragen.</li>`;
+
+  // Verwaltung
+  if(istAdmin()){
+    $("#uTab").innerHTML = users.map(u => {
+      const ich = u.id === me.id;
+      return `<tr><td>${esc(u.name)}</td><td>${esc(u.dienstnummer)}</td><td>${esc(u.rank)}</td>
+        <td>${u.role==="admin"?"Admin":"Mitglied"}</td>
+        <td><span class="status ${u.active?"an":"aus"}">${u.active?"Aktiv":"Wartet / gesperrt"}</span></td>
+        <td>${ich?"":`<button class="btn sek klein" data-act="zugang" data-id="${u.id}" type="button">${u.active?"Sperren":"Freischalten"}</button>
+        <button class="btn sek klein" data-act="rolle" data-id="${u.id}" type="button">${u.role==="admin"?"Admin entziehen":"Zum Admin machen"}</button>`}</td></tr>`;
+    }).join("");
+  }
+}
+
+$("#bSuche").oninput = renderAll;
+$("#pUser").onchange = () => {
+  const u = users.find(x => x.id === $("#pUser").value); if(!u) return;
+  const i = RAENGE.indexOf(u.rank);
+  $("#pRang").value = RAENGE[Math.min(i+1,RAENGE.length-1)];
+};
+
+/* ---------- Formulare ---------- */
+$("#bForm").onsubmit = async e => {
+  e.preventDefault(); $("#bMsg").textContent = "";
+  try{
+    await addDoc(collection(db,"reports"),{
+      title:$("#bTitel").value.trim(), type:$("#bArt").value, location:$("#bOrt").value.trim(),
+      date:$("#bDatum").value, narrative:$("#bText").value.trim(),
+      authorUid:me.id, authorName:me.name, createdAt:serverTimestamp()
+    });
+    e.target.reset(); toast("Bericht gespeichert");
+  }catch(err){$("#bMsg").textContent = fehlertext(err)}
+};
+
+$("#pForm").onsubmit = async e => {
+  e.preventDefault(); $("#pMsg").textContent = "";
+  const u = users.find(x => x.id === $("#pUser").value), neu = $("#pRang").value;
+  if(!u){$("#pMsg").textContent="Bitte ein Mitglied auswählen.";return}
+  if(u.rank === neu){$("#pMsg").textContent=`${u.name} hat den Rang „${neu}“ bereits.`;return}
+  try{
+    const batch = writeBatch(db);
+    batch.update(doc(db,"users",u.id),{rank:neu});
+    batch.set(doc(collection(db,"promotions")),{userUid:u.id,userName:u.name,from:u.rank,to:neu,reason:$("#pGrund").value.trim(),byName:me.name,createdAt:serverTimestamp()});
+    await batch.commit();
+    $("#pGrund").value = ""; toast("Rang geändert");
+  }catch(err){$("#pMsg").textContent = fehlertext(err)}
+};
+</script>
+</body>
+</html>
