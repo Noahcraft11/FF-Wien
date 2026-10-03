@@ -146,23 +146,88 @@ nav button.neu::after{content:"";display:inline-block;width:8px;height:8px;margi
  .lichtbalken i,nav button.neu::after{animation:none!important}
  .lichtbalken i:nth-child(odd){background:#3D86FF}
  .led-text{animation:none!important;display:block;padding:0 1rem;white-space:normal}}
+
+/* ===== Neues Erscheinungsbild ===== */
+:root{--r:12px}
+body{background:radial-gradient(900px 420px at 72% -140px,rgba(200,32,43,.08),transparent 70%) top/100% 460px no-repeat,var(--bg)}
+input,select,textarea{border-radius:9px;padding:.7rem .85rem}
+.btn{border-radius:9px;padding:.7rem 1.3rem;background:linear-gradient(180deg,#D8303B,var(--rot) 55%,var(--rot-d));box-shadow:0 1px 0 rgba(255,255,255,.22) inset,0 3px 8px rgba(158,23,32,.3)}
+.btn:hover{background:linear-gradient(180deg,#E03C47,#CF2631 55%,var(--rot-d))}
+.btn.sek{background:var(--surface);box-shadow:none}.btn.sek:hover{background:var(--hover)}
+.btn.gefahr{background:transparent;box-shadow:none}.btn.gefahr:hover{background:var(--err)}
+.panel,.bericht,.zahl,.tabelle,.leer{border-radius:var(--r)}
+.panel{padding:1.4rem 1.5rem}
+.panel h3{margin-bottom:.15rem}
+.bericht{padding:1.05rem 1.25rem}
+.tag{border-radius:6px}
+.zahl{padding:1rem 1.15rem;background:linear-gradient(180deg,var(--surface),var(--surface-2))}
+.zahl b{font-size:2.9rem;color:var(--link)}
+main header h2{font-size:2.5rem}
+main header::before{width:60px;height:5px}
+aside{background:linear-gradient(180deg,color-mix(in srgb,var(--side) 86%,#fff),var(--side) 55%)}
+aside .marke{display:flex;align-items:center;gap:.75rem}
+.emblem{width:42px;height:42px;flex:none;filter:drop-shadow(0 0 10px rgba(200,32,43,.55))}
+@media(min-width:801px){nav button{border-radius:10px}nav button.aktiv{background:linear-gradient(90deg,rgba(200,32,43,.32),var(--side-hover) 75%)}}
+#toast{border-radius:10px}
+
+/* Anmeldung */
+#auth{display:block;padding:0;background:var(--bg)}
+.login{min-height:100vh;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(360px,.8fr)}
+.login-bild{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;color:#fff;background:radial-gradient(800px 520px at 100% 100%,rgba(200,32,43,.38),transparent 62%),#0C0E11}
+.login-bild::before,.login-bild::after{content:"";position:absolute;top:0;width:60%;height:420px;pointer-events:none;background:radial-gradient(closest-side,rgba(61,134,255,.4),transparent)}
+.login-bild::before{left:-10%;animation:ledA 1s steps(1) infinite}
+.login-bild::after{right:-10%;animation:ledB 1s steps(1) infinite}
+.login-bild>*{position:relative;z-index:1}
+.lichtbalken.gross{padding:12px 16px;gap:4px}
+.lichtbalken.gross i{height:12px;border-radius:3px}
+.lichtbalken.gross i:nth-child(-n+6){animation:ledA 1s steps(1) infinite}
+.lichtbalken.gross i:nth-child(n+7){animation:ledB 1s steps(1) infinite}
+.login-titel{padding:2rem clamp(1.5rem,6vw,5rem)}
+.login-titel .emblem{width:64px;height:64px;margin-bottom:1.4rem}
+.login-titel h1{font-size:clamp(3.6rem,9vw,7.4rem);line-height:.88;letter-spacing:.5px}
+.login-titel p{max-width:30ch;margin:1.3rem 0 0;color:#B9BDC4;font-size:1.15rem}
+.login-bild .led-tafel{margin:0;border-radius:0;border-width:2px 0}
+.warn.hoch{height:18px}
+.login-form{display:grid;place-items:center;padding:2rem 1.2rem}
+.login-karte{width:100%;max-width:410px;background:var(--surface);border:1px solid var(--border);border-top:5px solid var(--rot);border-radius:16px;padding:2.1rem 1.9rem 1.9rem;box-shadow:0 28px 60px rgba(16,24,40,.2)}
+.login-karte h2{font-size:2.6rem}
+.login-karte .sub{color:var(--muted);margin:.35rem 0 .6rem}
+.login-karte input{padding:.8rem .9rem;font-size:1.02rem}
+.pw{position:relative}.pw input{padding-right:5.6rem}
+.pw .link{position:absolute;right:.9rem;top:50%;transform:translateY(-50%);margin:0;font-size:.85rem}
+.btn.gross{width:100%;margin-top:.5rem;padding:.9rem;font-size:1.08rem}
+.btn:disabled{opacity:.7;cursor:wait}
+#pending .karte-login{border-radius:16px}
+@media(max-width:800px){.login{grid-template-columns:1fr}.login-titel{padding:1.4rem}.login-titel .emblem{width:46px;height:46px;margin-bottom:.8rem}.login-titel h1{font-size:3.4rem}.login-titel p{display:none}.login-form{padding:1.5rem 1rem 2.5rem}}
+@media(prefers-reduced-motion:reduce){.login-bild::before,.login-bild::after,.lichtbalken.gross i{animation:none!important}.lichtbalken.gross i:nth-child(-n+6){background:#3D86FF}}
 </style>
 </head>
 <body>
 
 <!-- Anmeldung -->
 <section id="auth" class="hidden">
- <div class="karte-login">
-  <div class="warn"></div>
-  <div class="lichtbalken" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-  <div class="inhalt">
-   <h1>Feuerwehr Wien</h1>
-   <p class="sub" id="authSub">Konten legt ein Admin der Feuerwehr an.</p>
-   <form id="authForm">
+ <div class="login">
+  <div class="login-bild">
+   <div class="lichtbalken gross" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+   <div class="login-titel">
+    <svg class="emblem" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#C8202B"/><g transform="translate(3 3.2) scale(.75)"><path fill="#fff" d="M12 3c1 3.5-3.5 5-3.5 9.3a3.5 3.5 0 007 0c0-1.7-.8-2.6-1.4-3.6 3 1 4.9 3.4 4.9 6.6a7 7 0 11-14 0C5 9 10 7.5 12 3z"/></g></svg>
+    <h1>Feuerwehr<br>Wien</h1>
+    <p>Einsatzberichte, Termine und Dienstverwaltung an einem Ort.</p>
+   </div>
+   <div>
+    <div class="led-tafel" aria-hidden="true"><div class="led-text" style="--dauer:26s">Einsatzberichte +++ Termine und Übungen +++ Lehrgänge +++ Dokumente und Regelwerk +++ Abmeldungen</div></div>
+    <div class="warn hoch"></div>
+   </div>
+  </div>
+  <div class="login-form">
+   <form id="authForm" class="login-karte">
+    <h2>Anmelden</h2>
+    <p class="sub" id="authSub">Konten legt ein Admin der Feuerwehr an.</p>
     <label for="aMail">Benutzername</label><input id="aMail" required autocomplete="username">
-    <label for="aPw">Passwort</label><input id="aPw" type="password" required minlength="6" autocomplete="current-password">
+    <label for="aPw">Passwort</label>
+    <div class="pw"><input id="aPw" type="password" required minlength="6" autocomplete="current-password"><button type="button" class="link" id="pwZeigen" aria-pressed="false">Zeigen</button></div>
     <div class="msg" id="authMsg" role="alert"></div>
-    <button class="btn" id="authBtn" type="submit">Anmelden</button>
+    <button class="btn gross" id="authBtn" type="submit">Anmelden</button>
    </form>
   </div>
  </div>
@@ -185,7 +250,7 @@ nav button.neu::after{content:"";display:inline-block;width:8px;height:8px;margi
  <aside>
   <div class="warn"></div>
   <div class="lichtbalken" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-  <div class="marke"><b>Feuerwehr Wien</b><span>Mitgliederportal</span></div>
+  <div class="marke"><svg class="emblem" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#C8202B"/><g transform="translate(3 3.2) scale(.75)"><path fill="#fff" d="M12 3c1 3.5-3.5 5-3.5 9.3a3.5 3.5 0 007 0c0-1.7-.8-2.6-1.4-3.6 3 1 4.9 3.4 4.9 6.6a7 7 0 11-14 0C5 9 10 7.5 12 3z"/></g></svg><div><b>Feuerwehr Wien</b><span>Mitgliederportal</span></div></div>
   <nav id="nav">
    <button data-view="start" class="aktiv">Übersicht</button>
    <button data-view="ankuendigungen">Ankündigungen</button>
@@ -583,8 +648,14 @@ function fehlertext(e){
 /* ---------- Anmeldung ---------- */
 $("#authForm").onsubmit = async e => {
   e.preventDefault(); $("#authMsg").textContent = "";
+  const btn = $("#authBtn"); btn.disabled = true; btn.textContent = "Anmelden …";
   try{ await signInWithEmailAndPassword(auth,zuMail($("#aMail").value),$("#aPw").value) }
   catch(err){$("#authMsg").textContent = fehlertext(err)}
+  finally{btn.disabled = false; btn.textContent = "Anmelden"}
+};
+$("#pwZeigen").onclick = () => {
+  const i = $("#aPw"), zeigen = i.type === "password";
+  i.type = zeigen ? "text" : "password"; $("#pwZeigen").textContent = zeigen ? "Verbergen" : "Zeigen"; $("#pwZeigen").setAttribute("aria-pressed", zeigen);
 };
 
 document.addEventListener("click", async e => {
