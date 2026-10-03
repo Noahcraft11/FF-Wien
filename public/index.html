@@ -174,10 +174,8 @@ aside .marke{display:flex;align-items:center;gap:.75rem}
 #auth{display:block;padding:0;background:var(--bg)}
 .login{min-height:100vh;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(360px,.8fr)}
 .login-bild{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;color:#fff;background:radial-gradient(800px 520px at 100% 100%,rgba(200,32,43,.38),transparent 62%),#0C0E11}
-.login-bild::before,.login-bild::after{content:"";position:absolute;top:0;width:60%;height:420px;pointer-events:none;background:radial-gradient(closest-side,rgba(61,134,255,.4),transparent)}
-.login-bild::before{left:-10%;animation:ledA 1s steps(1) infinite}
-.login-bild::after{right:-10%;animation:ledB 1s steps(1) infinite}
 .login-bild>*{position:relative;z-index:1}
+.login-titel{flex:1;display:flex;flex-direction:column;justify-content:center}
 .lichtbalken.gross{padding:12px 16px;gap:4px}
 .lichtbalken.gross i{height:12px;border-radius:3px}
 .lichtbalken.gross i:nth-child(-n+6){animation:ledA 1s steps(1) infinite}
@@ -208,7 +206,6 @@ aside .marke{display:flex;align-items:center;gap:.75rem}
 <section id="auth" class="hidden">
  <div class="login">
   <div class="login-bild">
-   <div class="lichtbalken gross" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
    <div class="login-titel">
     <svg class="emblem" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#C8202B"/><g transform="translate(3 3.2) scale(.75)"><path fill="#fff" d="M12 3c1 3.5-3.5 5-3.5 9.3a3.5 3.5 0 007 0c0-1.7-.8-2.6-1.4-3.6 3 1 4.9 3.4 4.9 6.6a7 7 0 11-14 0C5 9 10 7.5 12 3z"/></g></svg>
     <h1>Feuerwehr<br>Wien</h1>
@@ -249,7 +246,6 @@ aside .marke{display:flex;align-items:center;gap:.75rem}
 <div id="app" class="hidden">
  <aside>
   <div class="warn"></div>
-  <div class="lichtbalken" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <div class="marke"><svg class="emblem" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#C8202B"/><g transform="translate(3 3.2) scale(.75)"><path fill="#fff" d="M12 3c1 3.5-3.5 5-3.5 9.3a3.5 3.5 0 007 0c0-1.7-.8-2.6-1.4-3.6 3 1 4.9 3.4 4.9 6.6a7 7 0 11-14 0C5 9 10 7.5 12 3z"/></g></svg><div><b>Feuerwehr Wien</b><span>Mitgliederportal</span></div></div>
   <nav id="nav">
    <button data-view="start" class="aktiv">Übersicht</button>
