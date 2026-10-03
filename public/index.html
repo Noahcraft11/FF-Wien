@@ -71,6 +71,7 @@ th{background:var(--papier);font-weight:600}
 .status{font-weight:600}.status.an{color:var(--ok)}.status.aus{color:var(--rot-d)}
 .leer{color:var(--muted);padding:1.2rem;background:#fff;border:1px dashed #B8BCC2}
 .log li{padding:.55rem 0;border-bottom:1px solid var(--nebel)}
+.tag.mittel{background:#B26A00}.tag.schwer{background:var(--rot)}
 .perm{display:flex;flex-direction:column;gap:.15rem;min-width:150px}
 .perm label{display:flex;align-items:center;gap:.45rem;margin:0;font-weight:500;font-size:.88rem;cursor:pointer}
 .perm input[type=checkbox]{width:auto;padding:0;margin:0}
@@ -130,6 +131,7 @@ th{background:var(--papier);font-weight:600}
    <button data-view="start" class="aktiv">Übersicht</button>
    <button data-view="berichte">Einsatzberichte</button>
    <button data-view="befoerderungen">Beförderungen</button>
+   <button data-view="arbeitsunfaelle">Arbeitsunfälle</button>
    <button data-view="verwaltung" id="navAdmin" class="hidden">Verwaltung</button>
   </nav>
   <div class="ich"><b id="ichName"></b><small id="ichRang"></small>
@@ -184,6 +186,33 @@ th{background:var(--papier);font-weight:600}
    </form>
    <h3 style="margin-bottom:.6rem">Verlauf</h3>
    <ul class="log panel" id="pListe"></ul>
+  </section>
+
+  <!-- Arbeitsunfälle -->
+  <section id="v-arbeitsunfaelle" class="hidden">
+   <header><h2>Arbeitsunfälle</h2><p>Unfälle und Verletzungen im Dienst dokumentieren.</p></header>
+   <form class="panel" id="aForm">
+    <h3>Neuer Arbeitsunfall</h3>
+    <div class="zeile2">
+     <div><label for="aPerson">Betroffene Person</label><input id="aPerson" list="aPersonen" required maxlength="60" autocomplete="off"><datalist id="aPersonen"></datalist></div>
+     <div><label for="aDatum">Datum und Uhrzeit</label><input id="aDatum" type="datetime-local" required></div>
+     <div><label for="aOrt">Unfallort</label><input id="aOrt" required maxlength="100"></div>
+     <div><label for="aArt">Art des Unfalls</label>
+      <select id="aArt"><option>Verletzung im Einsatz</option><option>Verletzung bei Übung/Training</option><option>Unfall auf Einsatzfahrt</option><option>Rauchgas/Gefahrstoff</option><option>Sonstiges</option></select></div>
+     <div><label for="aVerletzung">Art der Verletzung</label><input id="aVerletzung" required maxlength="100" placeholder="z. B. Verbrennung am Unterarm"></div>
+     <div><label for="aSchwere">Schweregrad</label>
+      <select id="aSchwere"><option>Leicht</option><option>Mittel</option><option>Schwer</option></select></div>
+    </div>
+    <label for="aText">Unfallhergang</label>
+    <textarea id="aText" rows="4" required maxlength="3000"></textarea>
+    <label for="aMass">Erstversorgung / Maßnahmen</label>
+    <textarea id="aMass" rows="3" maxlength="1500" placeholder="optional"></textarea>
+    <div class="msg" id="aMsg" role="alert"></div>
+    <button class="btn" type="submit">Unfall speichern</button>
+   </form>
+   <label for="aSuche" style="margin-top:0">Arbeitsunfälle durchsuchen</label>
+   <input id="aSuche" type="search" placeholder="Person, Ort, Art oder Verfasser" style="margin-bottom:1rem">
+   <div id="aListe"></div>
   </section>
 
   <!-- Verwaltung -->
@@ -257,7 +286,7 @@ const dauer = (a,b) => {
 };
 const fmtTs = t => t && t.toDate ? t.toDate().toLocaleDateString("de-AT",{dateStyle:"medium"}) : "gerade eben";
 
-let me = null, reports = [], promos = [], users = [], rollen = [], view = "start";
+let me = null, reports = [], promos = [], accidents = [], users = [], rollen = [], view = "start";
 const alleRollen = () => [{name:"Mitglied",admin:false},{name:"Admin",admin:true},...rollen];
 let userUnsub = null, dataUnsubs = [], dataSig = "";
 
@@ -265,7 +294,8 @@ let userUnsub = null, dataUnsubs = [], dataSig = "";
 // key = Feldname in users/{uid}.permissions und in firestore.rules, view = data-view der Navigation.
 const BEREICHE = [
   {key:"reports",    view:"berichte",       label:"Einsatzberichte"},
-  {key:"promotions", view:"befoerderungen", label:"Beförderungen"}
+  {key:"promotions", view:"befoerderungen", label:"Beförderungen"},
+  {key:"accidents",   view:"arbeitsunfaelle", label:"Arbeitsunfälle"}
 ];
 
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),3200)}
@@ -291,6 +321,7 @@ document.addEventListener("click", async e => {
     if(act==="rolle"){const u=users.find(x=>x.id===id); await updateDoc(doc(db,"users",id),{role:u.role==="admin"?"member":"admin"}); toast("Rolle geändert")}
     if(act==="mitglied-loeschen" && confirm("Dieses Konto löschen? Die Person kann sich danach nicht mehr einloggen.")){await deleteDoc(doc(db,"users",id)); toast("Konto gelöscht")}
     if(act==="rolle-loeschen" && confirm("Rolle entfernen? Bereits vergebene Rollen bleiben bei den Mitgliedern stehen.")){await deleteDoc(doc(db,"roles",id)); toast("Rolle entfernt")}
+    if(act==="unfall-loeschen" && confirm("Diesen Arbeitsunfall endgültig löschen?")){await deleteDoc(doc(db,"accidents",id)); toast("Arbeitsunfall gelöscht")}
     if(act==="loeschen" && confirm("Diesen Bericht endgültig löschen?")){await deleteDoc(doc(db,"reports",id)); toast("Bericht gelöscht")}
   }catch(err){toast(fehlertext(err))}
 });
@@ -336,9 +367,10 @@ function startData(){
     onSnapshot(query(collection(db,"roles"),orderBy("name")), s => {rollen=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f)
   );
   if(darf("reports")) dataUnsubs.push(onSnapshot(query(collection(db,"reports"),orderBy("date","desc"),limit(100)), s => {reports=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f));
+  if(darf("accidents")) dataUnsubs.push(onSnapshot(query(collection(db,"accidents"),orderBy("date","desc"),limit(100)), s => {accidents=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f));
   if(darf("promotions")) dataUnsubs.push(onSnapshot(query(collection(db,"promotions"),orderBy("createdAt","desc"),limit(100)), s => {promos=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f));
 }
-function stopData(){dataUnsubs.forEach(u=>u());dataUnsubs=[];dataSig="";reports=[];promos=[];users=[];rollen=[]}
+function stopData(){dataUnsubs.forEach(u=>u());dataUnsubs=[];dataSig="";reports=[];promos=[];accidents=[];users=[];rollen=[]}
 const istAdmin = () => me && me.role === "admin";
 // Admins sehen alles. Sonst zählt permissions[key]; fehlt der Eintrag, ist der Bereich erlaubt.
 const darf = key => !!me && (me.role === "admin" || !me.permissions || me.permissions[key] !== false);
@@ -357,6 +389,15 @@ function berichtKarte(r){
     <p>${esc(r.narrative)}</p></article>`;
 }
 
+function unfallKarte(a){
+  return `<article class="bericht"><div class="kopf"><h3>${esc(a.person)}</h3>
+    ${istAdmin()?`<button class="btn gefahr klein" data-act="unfall-loeschen" data-id="${a.id}" type="button">Löschen</button>`:""}</div>
+    <div class="meta"><span class="tag">${esc(a.type)}</span><span class="tag ${esc((a.severity||"").toLowerCase())}">${esc(a.severity)}</span>${esc(a.location)} · ${fmt(a.date)} · ${esc(a.authorName)}</div>
+    <p><b>Verletzung:</b> ${esc(a.injury)}</p>
+    <p><b>Hergang:</b> ${esc(a.narrative)}</p>
+    ${a.measures?`<p><b>Maßnahmen:</b> ${esc(a.measures)}</p>`:""}</article>`;
+}
+
 function renderAll(){
   if(!me || !me.active) return;
   $("#ichName").textContent = me.name;
@@ -367,7 +408,7 @@ function renderAll(){
   const sperre = BEREICHE.find(b => b.view===view && !darf(b.key));
   if(sperre) view = "start";
   document.querySelectorAll("#nav [data-view]").forEach(b => b.classList.toggle("aktiv",b.dataset.view===view));
-  ["start","berichte","befoerderungen","verwaltung"].forEach(v => $("#v-"+v).classList.toggle("hidden",v!==view));
+  ["start","berichte","befoerderungen","arbeitsunfaelle","verwaltung"].forEach(v => $("#v-"+v).classList.toggle("hidden",v!==view));
 
   // Übersicht
   const monat = new Date().toISOString().slice(0,7);
@@ -384,6 +425,12 @@ function renderAll(){
   const q = $("#bSuche").value.trim().toLowerCase();
   const treffer = reports.filter(r => !q || [r.title,r.location,r.type,r.authorName].join(" ").toLowerCase().includes(q));
   $("#bListe").innerHTML = treffer.map(berichtKarte).join("") || `<div class="leer">${q?"Kein Bericht passt zu deiner Suche.":"Noch keine Einsatzberichte."}</div>`;
+
+  // Arbeitsunfälle
+  $("#aPersonen").innerHTML = users.map(u => `<option value="${esc(u.name)}">`).join("");
+  const qa = $("#aSuche").value.trim().toLowerCase();
+  const aTreffer = accidents.filter(a => !qa || [a.person,a.location,a.type,a.injury,a.authorName].join(" ").toLowerCase().includes(qa));
+  $("#aListe").innerHTML = aTreffer.map(unfallKarte).join("") || `<div class="leer">${qa?"Kein Arbeitsunfall passt zu deiner Suche.":"Noch keine Arbeitsunfälle eingetragen."}</div>`;
 
   // Beförderungen
   $("#pForm").classList.toggle("hidden",!istAdmin());
@@ -417,6 +464,7 @@ function renderAll(){
 }
 
 $("#bSuche").oninput = renderAll;
+$("#aSuche").oninput = renderAll;
 $("#pUser").onchange = () => {
   const u = users.find(x => x.id === $("#pUser").value); if(!u) return;
   const i = RAENGE.indexOf(u.rank);
@@ -435,6 +483,19 @@ $("#bForm").onsubmit = async e => {
     });
     e.target.reset(); toast("Bericht gespeichert");
   }catch(err){$("#bMsg").textContent = fehlertext(err)}
+};
+
+$("#aForm").onsubmit = async e => {
+  e.preventDefault(); $("#aMsg").textContent = "";
+  try{
+    await addDoc(collection(db,"accidents"),{
+      person:$("#aPerson").value.trim(), date:$("#aDatum").value, location:$("#aOrt").value.trim(),
+      type:$("#aArt").value, injury:$("#aVerletzung").value.trim(), severity:$("#aSchwere").value,
+      narrative:$("#aText").value.trim(), measures:$("#aMass").value.trim(),
+      authorUid:me.id, authorName:me.name, createdAt:serverTimestamp()
+    });
+    e.target.reset(); toast("Arbeitsunfall gespeichert");
+  }catch(err){$("#aMsg").textContent = fehlertext(err)}
 };
 
 $("#nForm").onsubmit = async e => {
