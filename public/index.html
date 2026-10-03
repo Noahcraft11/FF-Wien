@@ -94,9 +94,9 @@ th{background:var(--papier);font-weight:600}
   <div class="warn"></div>
   <div class="inhalt">
    <h1>Feuerwehr Wien</h1>
-   <p class="sub">Konten legt ein Admin der Feuerwehr an.</p>
+   <p class="sub" id="authSub">Konten legt ein Admin der Feuerwehr an.</p>
    <form id="authForm">
-    <label for="aMail">E-Mail</label><input id="aMail" type="email" required autocomplete="email">
+    <label for="aMail">Benutzername</label><input id="aMail" required autocomplete="username">
     <label for="aPw">Passwort</label><input id="aPw" type="password" required minlength="6" autocomplete="current-password">
     <div class="msg" id="authMsg" role="alert"></div>
     <button class="btn" id="authBtn" type="submit">Anmelden</button>
@@ -189,13 +189,23 @@ th{background:var(--papier);font-weight:600}
     <div class="zeile2">
      <div><label for="nName">Name (IC)</label><input id="nName" required maxlength="60"></div>
      <div><label for="nDn">Dienstnummer</label><input id="nDn" required maxlength="20" placeholder="z. B. FW-104"></div>
-     <div><label for="nMail">E-Mail</label><input id="nMail" type="email" required></div>
+     <div><label for="nUser">Benutzername</label><input id="nUser" required maxlength="30" pattern="[A-Za-z0-9._\-]+" title="Nur Buchstaben, Zahlen, Punkt, Bindestrich und Unterstrich" autocomplete="off"></div>
      <div><label for="nPw">Startpasswort</label><input id="nPw" type="text" required minlength="6" autocomplete="off"></div>
      <div><label for="nRang">Rang</label><select id="nRang"></select></div>
-     <div><label for="nRolle">Rolle</label><select id="nRolle"><option value="member">Mitglied</option><option value="admin">Admin</option></select></div>
+     <div><label for="nRolle">Rolle</label><select id="nRolle"></select></div>
     </div>
     <div class="msg" id="nMsg" role="alert"></div>
     <button class="btn" type="submit">Konto anlegen</button>
+   </form>
+   <form class="panel" id="rForm">
+    <h3>Neue Rolle hinzufügen</h3>
+    <div class="zeile2">
+     <div><label for="rName">Name der Rolle</label><input id="rName" required maxlength="40" placeholder="z. B. Zugskommandant"></div>
+     <div><label for="rAdmin">Rechte</label><select id="rAdmin"><option value="0">Normale Rechte</option><option value="1">Admin-Rechte</option></select></div>
+    </div>
+    <div class="msg" id="rMsg" role="alert"></div>
+    <button class="btn" type="submit">Rolle hinzufügen</button>
+    <div id="rListe" style="margin-top:1rem"></div>
    </form>
    <div class="tabelle"><table>
     <thead><tr><th>Name</th><th>Dienstnr.</th><th>Rang</th><th>Rolle</th><th>Zugang</th><th></th></tr></thead>
@@ -209,7 +219,7 @@ th{background:var(--papier);font-weight:600}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,setDoc,addDoc,deleteDoc,updateDoc,collection,query,orderBy,limit,onSnapshot,writeBatch,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,getDoc,setDoc,addDoc,deleteDoc,updateDoc,collection,query,orderBy,limit,onSnapshot,writeBatch,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // 1) Trag hier die Werte aus der Firebase-Konsole ein (Projekteinstellungen → Web-App)
 const firebaseConfig = {
@@ -233,22 +243,24 @@ const RAENGE = ["Probefeuerwehrmann","Feuerwehrmann","Oberfeuerwehrmann","Hauptf
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = s => s ? new Date(s).toLocaleString("de-AT",{dateStyle:"medium",timeStyle:"short"}) : "";
+const zuMail = n => { n = n.trim(); return n.includes("@") ? n : n.toLowerCase().replace(/\s+/g,"") + "@ff-wien.portal"; };
 const fmtTs = t => t && t.toDate ? t.toDate().toLocaleDateString("de-AT",{dateStyle:"medium"}) : "gerade eben";
 
-let me = null, reports = [], promos = [], users = [], view = "start";
+let me = null, reports = [], promos = [], users = [], rollen = [], view = "start";
+const alleRollen = () => [{name:"Mitglied",admin:false},{name:"Admin",admin:true},...rollen];
 let userUnsub = null, dataUnsubs = [];
 
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),3200)}
 function zeige(was){["auth","pending","app"].forEach(id=>$("#"+id).classList.toggle("hidden",id!==was))}
 function fehlertext(e){
-  const m={"auth/invalid-credential":"E-Mail oder Passwort stimmt nicht.","auth/email-already-in-use":"Diese E-Mail ist schon registriert.","auth/weak-password":"Das Passwort braucht mindestens 6 Zeichen.","auth/invalid-email":"Die E-Mail-Adresse ist ungültig.","auth/too-many-requests":"Zu viele Versuche. Bitte warte kurz.","permission-denied":"Dafür fehlt dir die Berechtigung."};
+  const m={"auth/invalid-credential":"Benutzername oder Passwort stimmt nicht.","auth/email-already-in-use":"Diesen Benutzernamen gibt es schon.","auth/weak-password":"Das Passwort braucht mindestens 6 Zeichen.","auth/invalid-email":"Der Benutzername ist ungültig.","auth/too-many-requests":"Zu viele Versuche. Bitte warte kurz.","permission-denied":"Dafür fehlt dir die Berechtigung."};
   return m[e.code] || "Das hat nicht geklappt. Bitte versuche es nochmal.";
 }
 
 /* ---------- Anmeldung ---------- */
 $("#authForm").onsubmit = async e => {
   e.preventDefault(); $("#authMsg").textContent = "";
-  try{ await signInWithEmailAndPassword(auth,$("#aMail").value.trim(),$("#aPw").value) }
+  try{ await signInWithEmailAndPassword(auth,zuMail($("#aMail").value),$("#aPw").value) }
   catch(err){$("#authMsg").textContent = fehlertext(err)}
 };
 
@@ -259,9 +271,25 @@ document.addEventListener("click", async e => {
     if(act==="logout") await signOut(auth);
     if(act==="zugang"){const u=users.find(x=>x.id===id); await updateDoc(doc(db,"users",id),{active:!u.active}); toast(u.active?"Zugang gesperrt":"Zugang freigeschaltet")}
     if(act==="rolle"){const u=users.find(x=>x.id===id); await updateDoc(doc(db,"users",id),{role:u.role==="admin"?"member":"admin"}); toast("Rolle geändert")}
+    if(act==="mitglied-loeschen" && confirm("Dieses Konto löschen? Die Person kann sich danach nicht mehr einloggen.")){await deleteDoc(doc(db,"users",id)); toast("Konto gelöscht")}
+    if(act==="rolle-loeschen" && confirm("Rolle entfernen? Bereits vergebene Rollen bleiben bei den Mitgliedern stehen.")){await deleteDoc(doc(db,"roles",id)); toast("Rolle entfernt")}
     if(act==="loeschen" && confirm("Diesen Bericht endgültig löschen?")){await deleteDoc(doc(db,"reports",id)); toast("Bericht gelöscht")}
   }catch(err){toast(fehlertext(err))}
 });
+
+document.addEventListener("change", async e => {
+  const sel = e.target.closest(".rolle-sel"); if(!sel) return;
+  const r = alleRollen().find(x => x.name === sel.value); if(!r) return;
+  try{await updateDoc(doc(db,"users",sel.dataset.uid),{funktion:r.name,role:r.admin?"admin":"member"}); toast("Rolle geändert")}
+  catch(err){toast(fehlertext(err))}
+});
+$("#rForm").onsubmit = async e => {
+  e.preventDefault(); $("#rMsg").textContent = "";
+  const name = $("#rName").value.trim();
+  if(alleRollen().some(r => r.name.toLowerCase() === name.toLowerCase())){$("#rMsg").textContent = "Diese Rolle gibt es schon.";return}
+  try{await addDoc(collection(db,"roles"),{name,admin:$("#rAdmin").value==="1"}); e.target.reset(); toast("Rolle hinzugefügt")}
+  catch(err){$("#rMsg").textContent = fehlertext(err)}
+};
 
 /* ---------- Sitzung & Daten ---------- */
 onAuthStateChanged(auth, user => {
@@ -280,10 +308,11 @@ function startData(){
   dataUnsubs.push(
     onSnapshot(query(collection(db,"reports"),orderBy("date","desc"),limit(100)), s => {reports=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f),
     onSnapshot(query(collection(db,"promotions"),orderBy("createdAt","desc"),limit(100)), s => {promos=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f),
-    onSnapshot(query(collection(db,"users"),orderBy("name")), s => {users=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f)
+    onSnapshot(query(collection(db,"users"),orderBy("name")), s => {users=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f),
+    onSnapshot(query(collection(db,"roles"),orderBy("name")), s => {rollen=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f)
   );
 }
-function stopData(){dataUnsubs.forEach(u=>u());dataUnsubs=[];reports=[];promos=[];users=[]}
+function stopData(){dataUnsubs.forEach(u=>u());dataUnsubs=[];reports=[];promos=[];users=[];rollen=[]}
 const istAdmin = () => me && me.role === "admin";
 
 /* ---------- Navigation ---------- */
@@ -338,13 +367,18 @@ function renderAll(){
 
   // Verwaltung
   if(istAdmin()){
+    const nr = $("#nRolle"), alt2 = nr.value;
+    nr.innerHTML = alleRollen().map(r => `<option>${esc(r.name)}</option>`).join("");
+    if(alt2) nr.value = alt2;
+    $("#rListe").innerHTML = rollen.map(r => `<span class="tag">${esc(r.name)}${r.admin?" · Admin":""}</span><button class="btn gefahr klein" data-act="rolle-loeschen" data-id="${r.id}" type="button" aria-label="Rolle ${esc(r.name)} entfernen">Entfernen</button> `).join("") || "<small>Noch keine eigenen Rollen. Mitglied und Admin gibt es immer.</small>";
     $("#uTab").innerHTML = users.map(u => {
-      const ich = u.id === me.id;
-      return `<tr><td>${esc(u.name)}</td><td>${esc(u.dienstnummer)}</td><td>${esc(u.rank)}</td>
-        <td>${u.role==="admin"?"Admin":"Mitglied"}</td>
-        <td><span class="status ${u.active?"an":"aus"}">${u.active?"Aktiv":"Wartet / gesperrt"}</span></td>
+      const ich = u.id === me.id, cur = u.funktion || (u.role==="admin"?"Admin":"Mitglied");
+      const opts = alleRollen().map(r => `<option${r.name===cur?" selected":""}>${esc(r.name)}</option>`).join("");
+      return `<tr><td>${esc(u.name)}${u.username?`<br><small>${esc(u.username)}</small>`:""}</td><td>${esc(u.dienstnummer)}</td><td>${esc(u.rank)}</td>
+        <td>${ich?esc(cur):`<select class="rolle-sel" data-uid="${u.id}" aria-label="Rolle von ${esc(u.name)}">${opts}</select>`}</td>
+        <td><span class="status ${u.active?"an":"aus"}">${u.active?"Aktiv":"Gesperrt"}</span></td>
         <td>${ich?"":`<button class="btn sek klein" data-act="zugang" data-id="${u.id}" type="button">${u.active?"Sperren":"Freischalten"}</button>
-        <button class="btn sek klein" data-act="rolle" data-id="${u.id}" type="button">${u.role==="admin"?"Admin entziehen":"Zum Admin machen"}</button>`}</td></tr>`;
+        <button class="btn gefahr klein" data-act="mitglied-loeschen" data-id="${u.id}" type="button">Löschen</button>`}</td></tr>`;
     }).join("");
   }
 }
@@ -372,8 +406,9 @@ $("#bForm").onsubmit = async e => {
 $("#nForm").onsubmit = async e => {
   e.preventDefault(); $("#nMsg").textContent = "";
   try{
-    const c = await createUserWithEmailAndPassword(zweitAuth,$("#nMail").value.trim(),$("#nPw").value);
-    await setDoc(doc(db,"users",c.user.uid),{name:$("#nName").value.trim(),dienstnummer:$("#nDn").value.trim(),rank:$("#nRang").value,role:$("#nRolle").value,active:true,createdAt:serverTimestamp()});
+    const rl = alleRollen().find(r => r.name === $("#nRolle").value) || {name:"Mitglied",admin:false};
+    const c = await createUserWithEmailAndPassword(zweitAuth,zuMail($("#nUser").value),$("#nPw").value);
+    await setDoc(doc(db,"users",c.user.uid),{name:$("#nName").value.trim(),dienstnummer:$("#nDn").value.trim(),rank:$("#nRang").value,role:rl.admin?"admin":"member",funktion:rl.name,username:$("#nUser").value.trim().toLowerCase(),active:true,createdAt:serverTimestamp()});
     await signOut(zweitAuth);
     e.target.reset(); toast("Konto angelegt");
   }catch(err){$("#nMsg").textContent = fehlertext(err)}
