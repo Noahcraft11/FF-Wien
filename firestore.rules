@@ -5,25 +5,79 @@ service cloud.firestore {
     function ich()   { return get(/databases/$(db)/documents/users/$(request.auth.uid)).data; }
     function aktiv() { return request.auth != null && ich().active == true; }
     function admin() { return aktiv() && ich().role == 'admin'; }
+    // Einzelrechte aus users/{uid}.rights; def = Standard, wenn der Admin nichts eingestellt hat
+    function recht(k, def) { return admin() || (aktiv() && ich().get('rights', {}).get(k, def) == true); }
+    function warnen()      { return admin() || (aktiv() && ich().get('canWarn', false) == true); }
 
+    // Mitglieder: Admin legt Konten an und ändert alles; jedes Mitglied darf nur die eigene Telefonnummer ändern
     match /users/{uid} {
       allow read: if request.auth != null && (request.auth.uid == uid || aktiv());
-      // Selbstregistrierung nur als gesperrtes Mitglied
-      allow create: if request.auth.uid == uid
-                    && request.resource.data.role == 'member'
-                    && request.resource.data.active == false;
-      allow update, delete: if admin();
+      allow create: if admin()
+                    || (request.auth.uid == uid
+                        && request.resource.data.role == 'member'
+                        && request.resource.data.active == false);
+      allow update: if admin()
+                    || (aktiv() && request.auth.uid == uid
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['phone']));
+      allow delete: if admin();
+    }
+
+    match /roles/{id} {
+      allow read: if aktiv();
+      allow write: if admin();
     }
 
     match /reports/{id} {
       allow read: if aktiv();
-      allow create: if aktiv() && request.resource.data.authorUid == request.auth.uid;
+      allow create: if recht('reports', true) && request.resource.data.authorUid == request.auth.uid;
       allow update, delete: if admin();
     }
 
     match /promotions/{id} {
       allow read: if aktiv();
       allow create: if admin();
+    }
+
+    match /accidents/{id} {
+      allow read: if aktiv();
+      allow create: if recht('accidents', true) && request.resource.data.authorUid == request.auth.uid;
+      allow update, delete: if admin();
+    }
+
+    match /courses/{id} {
+      allow read: if aktiv();
+      allow create: if recht('courses', false);
+      allow update, delete: if admin();
+    }
+
+    match /courseAwards/{id} {
+      allow read: if aktiv();
+      allow create: if recht('courses', false);
+      allow delete: if admin();
+    }
+
+    // Verwarnen: wer verwarnen darf sieht alle, alle anderen nur die eigenen
+    match /warnings/{id} {
+      allow read: if aktiv() && (warnen() || resource.data.userUid == request.auth.uid);
+      allow create: if warnen();
+      allow delete: if admin();
+    }
+
+    match /announcements/{id} { allow read: if aktiv(); allow create, update: if recht('announce', false); allow delete: if admin(); }
+    match /events/{id}        { allow read: if aktiv(); allow create, update: if recht('events', false);   allow delete: if admin(); }
+    match /docs/{id}          { allow read: if aktiv(); allow create, update: if recht('docs', false);     allow delete: if admin(); }
+
+    match /absences/{id} {
+      allow read: if admin() || (aktiv() && resource.data.userUid == request.auth.uid);
+      allow create: if aktiv() && request.resource.data.userUid == request.auth.uid;
+      allow delete: if admin() || (aktiv() && resource.data.userUid == request.auth.uid);
+    }
+
+    // Zähler für Einsatznummern: darf nur um genau 1 steigen
+    match /counters/{id} {
+      allow read: if aktiv();
+      allow create: if recht('reports', true) && request.resource.data.n == 1;
+      allow update: if recht('reports', true) && request.resource.data.n == resource.data.n + 1;
     }
   }
 }
