@@ -8,7 +8,7 @@
 <title>Feuerwehr Wien · Mitgliederportal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=Doto:wght@700;900&display=swap" rel="stylesheet">
 <style>
 :root{
 --rot:#C8202B;--rot-d:#9E1720;--gelb:#F4C300;--ok:#1E7B4A;
@@ -122,7 +122,30 @@ tbody tr:last-child td{border-bottom:0}
 .bal div{background:var(--surface-2);border-radius:3px}
 .bal i{display:block;height:12px;border-radius:3px;background:var(--rot)}
 details.bericht summary{cursor:pointer;font:600 1.3rem var(--kopf)}
-@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+/* LED-Elemente */
+.lichtbalken{display:flex;gap:3px;padding:6px 10px;background:#0A0C0F}
+.lichtbalken i{flex:1;height:7px;border-radius:2px;background:#11233F}
+.lichtbalken i:nth-child(odd){animation:ledA 1s steps(1) infinite}
+.lichtbalken i:nth-child(even){animation:ledB 1s steps(1) infinite}
+@keyframes ledA{0%{background:#3D86FF;box-shadow:0 0 8px 1px rgba(61,134,255,.75)}50%{background:#11233F;box-shadow:none}}
+@keyframes ledB{0%{background:#11233F;box-shadow:none}50%{background:#3D86FF;box-shadow:0 0 8px 1px rgba(61,134,255,.75)}}
+.led-tafel{position:relative;overflow:hidden;margin-bottom:1.5rem;padding:.7rem 0;background:#0A0A0A;border:2px solid #2B2B2B;border-radius:6px;box-shadow:inset 0 0 14px #000}
+.led-tafel::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(rgba(0,0,0,.6) 1px,transparent 1.6px) 0 0/3px 3px}
+.led-text{display:inline-block;white-space:nowrap;padding-left:100%;font:900 1.5rem/1 "Doto",ui-monospace,monospace;color:#FFB000;text-shadow:0 0 7px rgba(255,140,0,.65);animation:lauf var(--dauer,30s) linear infinite}
+.led-tafel:hover .led-text{animation-play-state:paused}
+@keyframes lauf{to{transform:translateX(-100%)}}
+.zahl b{font-family:"Doto",var(--kopf);font-weight:900}
+.led{display:inline-block;width:.65em;height:.65em;margin-right:.4rem;border-radius:50%;vertical-align:baseline}
+.led.gruen{background:#2BD576;box-shadow:0 0 6px 1px rgba(43,213,118,.7)}
+.led.gelb{background:#FFB000;box-shadow:0 0 6px 1px rgba(255,176,0,.7)}
+.led.rot{background:#FF3B3B;box-shadow:0 0 6px 1px rgba(255,59,59,.7)}
+.led.aus{background:#5A6068}
+nav button.neu::after{content:"";display:inline-block;width:8px;height:8px;margin-left:.55rem;border-radius:50%;background:#FF3B3B;box-shadow:0 0 8px 1px rgba(255,59,59,.8);animation:puls 1.4s ease-in-out infinite}
+@keyframes puls{50%{opacity:.25}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}
+ .lichtbalken i,nav button.neu::after{animation:none!important}
+ .lichtbalken i:nth-child(odd){background:#3D86FF}
+ .led-text{animation:none!important;display:block;padding:0 1rem;white-space:normal}}
 </style>
 </head>
 <body>
@@ -131,6 +154,7 @@ details.bericht summary{cursor:pointer;font:600 1.3rem var(--kopf)}
 <section id="auth" class="hidden">
  <div class="karte-login">
   <div class="warn"></div>
+  <div class="lichtbalken" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <div class="inhalt">
    <h1>Feuerwehr Wien</h1>
    <p class="sub" id="authSub">Konten legt ein Admin der Feuerwehr an.</p>
@@ -160,6 +184,7 @@ details.bericht summary{cursor:pointer;font:600 1.3rem var(--kopf)}
 <div id="app" class="hidden">
  <aside>
   <div class="warn"></div>
+  <div class="lichtbalken" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <div class="marke"><b>Feuerwehr Wien</b><span>Mitgliederportal</span></div>
   <nav id="nav">
    <button data-view="start" class="aktiv">Übersicht</button>
@@ -187,6 +212,7 @@ details.bericht summary{cursor:pointer;font:600 1.3rem var(--kopf)}
   <!-- Übersicht -->
   <section id="v-start">
    <header><h2>Übersicht</h2><p>Aktueller Stand der Feuerwehr.</p></header>
+   <div class="led-tafel" role="status" aria-label="Aktuelle Meldungen"><div class="led-text" id="ledText"></div></div>
    <div class="zahlen" id="zahlen"></div>
    <h3 style="margin-bottom:.7rem">Ankündigungen</h3>
    <div id="anStart" style="margin-bottom:1.5rem"></div>
@@ -686,7 +712,7 @@ function verwarnKarte(w){
 function unfallKarte(a){
   return `<article class="bericht"><div class="kopf"><h3>${esc(a.person)}</h3>
     ${istAdmin()?`<button class="btn gefahr klein" data-act="unfall-loeschen" data-id="${a.id}" type="button">Löschen</button>`:""}</div>
-    <div class="meta"><span class="tag">${esc(a.type)}</span><span class="tag ${esc((a.severity||"").toLowerCase())}">${esc(a.severity)}</span>${esc(a.location)} · ${fmt(a.date)} · ${esc(a.authorName)}</div>
+    <div class="meta"><span class="tag">${esc(a.type)}</span><span class="tag ${esc((a.severity||"").toLowerCase())}"><span class="led ${a.severity==="Schwer"?"rot":a.severity==="Mittel"?"gelb":"gruen"}"></span>${esc(a.severity)}</span>${esc(a.location)} · ${fmt(a.date)} · ${esc(a.authorName)}</div>
     <p><b>Verletzung:</b> ${esc(a.injury)}</p>
     <p><b>Hergang:</b> ${esc(a.narrative)}</p>
     ${a.measures?`<p><b>Maßnahmen:</b> ${esc(a.measures)}</p>`:""}</article>`;
@@ -823,7 +849,7 @@ function renderAll(){
       const opts = alleRollen().map(r => `<option${r.name===cur?" selected":""}>${esc(r.name)}</option>`).join("");
       return `<tr><td><button class="namelink" data-act="profil" data-id="${u.id}" type="button">${esc(u.name)}</button>${u.username?`<br><small>${esc(u.username)}</small>`:""}</td><td>${esc(u.dienstnummer)}</td><td>${esc(u.rank)}</td>
         <td>${ich?esc(cur):`<select class="rolle-sel" data-uid="${u.id}" aria-label="Rolle von ${esc(u.name)}">${opts}</select>`}</td>
-        <td><span class="status ${u.active?"an":"aus"}">${u.active?"Aktiv":"Gesperrt"}</span></td>
+        <td><span class="status ${u.active?"an":"aus"}"><span class="led ${u.active?"gruen":"rot"}"></span>${u.active?"Aktiv":"Gesperrt"}</span></td>
         <td><div class="perm">${BEREICHE.map(b => { const admin = u.role==="admin", an = admin || !u.permissions || u.permissions[b.key] !== false;
           return `<label><input type="checkbox" class="perm-cb" data-uid="${u.id}" data-key="${b.key}"${an?" checked":""}${admin?" disabled":""}><span>${esc(b.label)}</span></label>`; }).join("")}${u.role==="admin"?"<small>Admins sehen alles.</small>":""}</div></td>
         <td><div class="perm">${RECHTE.map(r => `<label><input type="checkbox" class="recht-cb" data-uid="${u.id}" data-key="${r.key}"${hatRecht(u,r.key)?" checked":""}${u.role==="admin"?" disabled":""}><span>${esc(r.label)}</span></label>`).join("")}</div></td>
@@ -846,13 +872,22 @@ function renderNeu(){
 
   // Termine
   const kommend = termine.filter(t => t.start >= jetzt).sort((a,b) => a.start.localeCompare(b.start));
+  const tmLed = t => { const h = (new Date(t.start) - Date.now()) / 36e5, [c,tt] = h < 0 ? ["aus","Vorbei"] : h < 24 ? ["gelb","Beginnt in den nächsten 24 Stunden"] : ["gruen","Geplant"]; return `<span class="led ${c}" title="${tt}"></span>`; };
   const tmKarte = t => { const ab = abm.filter(a => a.eventId===t.id);
     return `<article class="bericht"><div class="kopf"><h3>${esc(t.title)}</h3>${loeschen("tm-loeschen",t.id)}</div>
-    <div class="meta"><span class="tag">${esc(t.type)}</span>${fmt(t.start)}${t.location?` · ${esc(t.location)}`:""}</div>
+    <div class="meta">${tmLed(t)}<span class="tag">${esc(t.type)}</span>${fmt(t.start)}${t.location?` · ${esc(t.location)}`:""}</div>
     ${t.description?`<p>${esc(t.description)}</p>`:""}
     ${adm ? (ab.length ? `<p><b>Abgemeldet:</b> ${ab.map(a => esc(a.userName)).join(", ")}</p>` : "") : (ab.length ? `<span class="tag mittel">Du bist abgemeldet</span>` : "")}</article>`; };
   $("#tmKommend").innerHTML = kommend.map(tmKarte).join("") || `<div class="leer">Keine anstehenden Termine.</div>`;
   $("#tmVorbei").innerHTML = termine.filter(t => t.start < jetzt).slice(0,20).map(tmKarte).join("") || `<div class="leer">Noch keine vergangenen Termine.</div>`;
+
+  // LED-Laufschrift und Hinweis-LED
+  const meldungen = ankuend.slice(0,3).map(a => (a.important ? "WICHTIG: " : "") + a.title);
+  if(kommend[0]) meldungen.push(`Nächster Termin: ${kommend[0].title}, ${fmt(kommend[0].start)}`);
+  if(darf("reports") && reports[0]) meldungen.push(`Letzter Einsatz: ${reports[0].number ? reports[0].number + " " : ""}${reports[0].type}, ${reports[0].location}`);
+  const ledTxt = meldungen.join("   +++   ") || "Keine aktuellen Meldungen";
+  if($("#ledText").textContent !== ledTxt){ $("#ledText").textContent = ledTxt; $("#ledText").style.setProperty("--dauer", Math.max(20, Math.round(ledTxt.length * .3)) + "s"); }
+  document.querySelector('#nav [data-view="ankuendigungen"]').classList.toggle("neu", ankuend.some(a => a.important && a.createdAt?.toMillis && Date.now() - a.createdAt.toMillis() < 7*864e5));
 
   // Abmeldungen
   $("#abSub").textContent = adm ? "Alle Abmeldungen der Mitglieder." : "Melde dich für Termine oder Zeiträume ab.";
