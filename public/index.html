@@ -198,6 +198,43 @@ aside .marke{display:flex;align-items:center;gap:.75rem}
 #pending .karte-login{border-radius:16px}
 @media(max-width:800px){.login{grid-template-columns:1fr}.login-titel{padding:1.4rem}.login-titel .emblem{width:46px;height:46px;margin-bottom:.8rem}.login-titel h1{font-size:3.4rem}.login-titel p{display:none}.login-form{padding:1.5rem 1rem 2.5rem}}
 @media(prefers-reduced-motion:reduce){.login-bild::before,.login-bild::after,.lichtbalken.gross i{animation:none!important}.lichtbalken.gross i:nth-child(-n+6){background:#3D86FF}}
+
+/* ===== Design-Überarbeitung 2 ===== */
+body{font-size:16.5px}
+#app{grid-template-columns:268px 1fr}
+main{max-width:1180px;padding:1.6rem clamp(1rem,3.2vw,3rem) 4rem}
+aside .marke{padding:1.4rem 1.3rem 1.1rem}
+aside .marke b{font-size:1.7rem}
+nav{padding:.3rem .8rem 1rem;gap:3px}
+nav button{display:flex;align-items:center;gap:.75rem;padding:.62rem .85rem;font-size:.97rem;border-left-width:0}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+nav button.aktiv .ic{color:#FF6B73;opacity:1}
+nav button.aktiv{box-shadow:inset 3px 0 0 var(--rot)}
+nav button.neu::after{margin-left:auto}
+.ng{padding:1.1rem .9rem .35rem;font:600 .8rem var(--fließ);color:#8B929B;letter-spacing:.03em}
+.ich{padding:1rem 1.2rem 1.1rem;background:rgba(0,0,0,.18)}
+.ich-kopf{display:flex;align-items:center;gap:.75rem}
+.avatar{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;font:700 1.05rem var(--kopf);color:#fff;background:linear-gradient(135deg,#E03C47,#8E141C);box-shadow:0 0 0 2px var(--side-border)}
+.uhr-leiste{display:flex;justify-content:flex-end;margin-bottom:.2rem}
+#uhr{font:900 1.05rem/1 "Doto",ui-monospace,monospace;color:#FFB000;background:#0A0A0A;padding:.4rem .85rem;border:1px solid #2B2B2B;border-radius:8px;text-shadow:0 0 6px rgba(255,140,0,.6);box-shadow:inset 0 0 8px #000}
+main header{margin-bottom:1.8rem}
+main header h2{font-size:2.7rem;letter-spacing:.3px}
+main header p{font-size:1.02rem}
+.panel>h3{padding-bottom:.7rem;margin-bottom:.4rem;border-bottom:1px solid var(--border)}
+.panel{box-shadow:0 1px 2px rgba(16,24,40,.05),0 8px 24px rgba(16,24,40,.06)}
+.bericht{box-shadow:0 1px 2px rgba(16,24,40,.05),0 4px 14px rgba(16,24,40,.05)}
+.bericht .kopf h3{font-size:1.45rem}
+.bericht[style*="--ac"]{border-left-color:var(--ac);background:linear-gradient(90deg,color-mix(in srgb,var(--ac) 10%,var(--surface)),var(--surface) 42%)}
+.tag.art{background:var(--ac)}
+.tag.nr{background:transparent;color:var(--ac);border:1.5px solid var(--ac);font:900 .95rem/1.2 "Doto",ui-monospace,monospace;letter-spacing:.05em;padding:.05rem .5rem;vertical-align:middle}
+.zahl{border-top-width:5px}
+.zahl span{font-size:.95rem}
+tbody tr:nth-child(even){background:var(--surface-2)}
+th{padding:.8rem .9rem}
+.leer{text-align:center;padding:1.8rem 1.2rem;border-radius:var(--r)}
+input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(200,32,43,.18)}
+::selection{background:rgba(200,32,43,.28)}
+@media(max-width:800px){#app{grid-template-columns:1fr}.ng{display:none}.ich-kopf small{display:none}.uhr-leiste{display:none}nav button{padding:.7rem .8rem}nav button span{font-size:.9rem}main header h2{font-size:2.2rem}}
 </style>
 </head>
 <body>
@@ -248,28 +285,34 @@ aside .marke{display:flex;align-items:center;gap:.75rem}
   <div class="warn"></div>
   <div class="marke"><svg class="emblem" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#C8202B"/><g transform="translate(3 3.2) scale(.75)"><path fill="#fff" d="M12 3c1 3.5-3.5 5-3.5 9.3a3.5 3.5 0 007 0c0-1.7-.8-2.6-1.4-3.6 3 1 4.9 3.4 4.9 6.6a7 7 0 11-14 0C5 9 10 7.5 12 3z"/></g></svg><div><b>Feuerwehr Wien</b><span>Mitgliederportal</span></div></div>
   <nav id="nav">
-   <button data-view="start" class="aktiv">Übersicht</button>
-   <button data-view="ankuendigungen">Ankündigungen</button>
-   <button data-view="termine">Termine</button>
-   <button data-view="abmeldungen">Abmeldungen</button>
-   <button data-view="berichte">Einsatzberichte</button>
-   <button data-view="befoerderungen">Beförderungen</button>
-   <button data-view="arbeitsunfaelle">Arbeitsunfälle</button>
-   <button data-view="lehrgaenge">Lehrgänge</button>
-   <button data-view="verwarnungen">Verwarnungen</button>
-   <button data-view="statistik">Statistik</button>
-   <button data-view="dokumente">Dokumente</button>
-   <button data-view="telefonbuch">Telefonbuch</button>
-   <button data-view="profil">Mein Profil</button>
-   <button data-view="verwaltung" id="navAdmin" class="hidden">Verwaltung</button>
+   <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></symbol><symbol id="i-mega" viewBox="0 0 24 24"><path d="M3 11v3h4l8 4V7L7 11H3zM18 9a4 4 0 010 6"/></symbol><symbol id="i-cal" viewBox="0 0 24 24"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"/></symbol><symbol id="i-userx" viewBox="0 0 24 24"><path d="M9 11a4 4 0 100-8 4 4 0 000 8zM2 21c0-4 3-6 7-6s7 2 7 6M17 8l5 5M22 8l-5 5"/></symbol><symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3c1 4-4 5-4 10a4 4 0 008 0c0-2-1-3-1-5 3 1 5 4 5 7a8 8 0 01-16 0c0-6 5-8 8-12z"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2zM12 10v5M12 18v.5"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 16v-5M13 16V8M18 16v-3"/></symbol><symbol id="i-award" viewBox="0 0 24 24"><path d="M12 14a6 6 0 100-12 6 6 0 000 12zM8.5 13L7 22l5-3 5 3-1.5-9"/></symbol><symbol id="i-school" viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3zM5 17a3 3 0 013-3h11"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2 1.5a11 11 0 005 5l1.5-2 5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></symbol><symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.5-6 8-6s8 2 8 6"/></symbol><symbol id="i-cog" viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zM12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol></svg>
+   <button data-view="start" class="aktiv"><svg class="ic"><use href="#i-home"/></svg><span>Übersicht</span></button>
+   <div class="ng">Dienst</div>
+   <button data-view="ankuendigungen"><svg class="ic"><use href="#i-mega"/></svg><span>Ankündigungen</span></button>
+   <button data-view="termine"><svg class="ic"><use href="#i-cal"/></svg><span>Termine</span></button>
+   <button data-view="abmeldungen"><svg class="ic"><use href="#i-userx"/></svg><span>Abmeldungen</span></button>
+   <div class="ng">Einsätze</div>
+   <button data-view="berichte"><svg class="ic"><use href="#i-flame"/></svg><span>Einsatzberichte</span></button>
+   <button data-view="arbeitsunfaelle"><svg class="ic"><use href="#i-alert"/></svg><span>Arbeitsunfälle</span></button>
+   <button data-view="statistik"><svg class="ic"><use href="#i-chart"/></svg><span>Statistik</span></button>
+   <div class="ng">Personal</div>
+   <button data-view="befoerderungen"><svg class="ic"><use href="#i-award"/></svg><span>Beförderungen</span></button>
+   <button data-view="lehrgaenge"><svg class="ic"><use href="#i-school"/></svg><span>Lehrgänge</span></button>
+   <button data-view="verwarnungen"><svg class="ic"><use href="#i-shield"/></svg><span>Verwarnungen</span></button>
+   <button data-view="dokumente"><svg class="ic"><use href="#i-book"/></svg><span>Dokumente</span></button>
+   <button data-view="telefonbuch"><svg class="ic"><use href="#i-phone"/></svg><span>Telefonbuch</span></button>
+   <div class="ng">Konto</div>
+   <button data-view="profil"><svg class="ic"><use href="#i-user"/></svg><span>Mein Profil</span></button>
+   <button data-view="verwaltung" id="navAdmin" class="hidden"><svg class="ic"><use href="#i-cog"/></svg><span>Verwaltung</span></button>
   </nav>
-  <div class="ich"><b id="ichName"></b><small id="ichRang"></small>
+  <div class="ich"><div class="ich-kopf"><span class="avatar" id="ichAv"></span><div><b id="ichName"></b><small id="ichRang"></small></div></div>
    <div class="ich-btns">
     <button class="btn sek klein" id="themeBtn" type="button"></button>
     <button class="btn sek klein" data-act="logout" type="button">Abmelden</button></div></div>
  </aside>
 
  <main>
+  <div class="uhr-leiste"><span id="uhr"></span></div>
   <!-- Übersicht -->
   <section id="v-start">
    <header><h2>Übersicht</h2><p>Aktueller Stand der Feuerwehr.</p></header>
@@ -625,6 +668,7 @@ const BEREICHE = [
 
 // Einzelrechte, die ein Admin pro Mitglied vergeben kann (users/{uid}.rights.<key>; "warn" liegt auf users/{uid}.canWarn).
 // def = Standard, solange der Admin nichts eingestellt hat. Admins dürfen immer alles.
+const ART_FARBE = {"Brand":"#D1242F","Technischer Einsatz":"#C27C0E","Verkehrsunfall":"#2F6FDE","Brandmeldealarm":"#E8590C","Sonstiges":"#6B7280"};
 const RECHTE = [
   {key:"warn",      label:"Verwarnen",                    def:false},
   {key:"reports",   label:"Einsatzberichte schreiben",    def:true},
@@ -762,9 +806,9 @@ $("#nav").onclick = e => {
 
 /* ---------- Anzeige ---------- */
 function berichtKarte(r){
-  return `<article class="bericht"><div class="kopf"><h3>${r.number?`<span class="tag">${esc(r.number)}</span> `:""}${esc(r.title)}</h3>
+  return `<article class="bericht" style="--ac:${ART_FARBE[r.type]||"#6B7280"}"><div class="kopf"><h3>${r.number?`<span class="tag nr">${esc(r.number)}</span> `:""}${esc(r.title)}</h3>
     ${istAdmin()?`<button class="btn gefahr klein" data-act="loeschen" data-id="${r.id}" type="button">Löschen</button>`:""}</div>
-    <div class="meta"><span class="tag">${esc(r.type)}</span>${esc(r.location)} · ${fmt(r.date)}${r.endDate?` bis ${fmt(r.endDate)} (${dauer(r.date,r.endDate)})`:""} · ${esc(r.authorName)}</div>
+    <div class="meta"><span class="tag art">${esc(r.type)}</span>${esc(r.location)} · ${fmt(r.date)}${r.endDate?` bis ${fmt(r.endDate)} (${dauer(r.date,r.endDate)})`:""} · ${esc(r.authorName)}</div>
     <p>${esc(r.narrative)}</p>${r.crew&&r.crew.length?`<p style="margin-top:.5rem"><b>Beteiligt:</b> ${r.crew.map(c => esc(c.name)).join(", ")}</p>`:""}</article>`;
 }
 
@@ -787,7 +831,7 @@ function unfallKarte(a){
 
 function renderAll(){
   if(!me || !me.active) return;
-  $("#ichName").textContent = me.name;
+  $("#ichName").textContent = me.name; $("#ichAv").textContent = me.name.split(/\s+/).filter(Boolean).slice(0,2).map(x => x[0].toUpperCase()).join("");
   $("#ichRang").textContent = `${me.rank} · ${me.dienstnummer}`;
   $("#navAdmin").classList.toggle("hidden",!istAdmin());
   BEREICHE.forEach(b => document.querySelector(`#nav [data-view="${b.view}"]`).classList.toggle("hidden",!darf(b.key)));
@@ -973,7 +1017,7 @@ function renderNeu(){
 
   // Statistik
   if(view==="statistik"){
-    const bal = l => { const m = Math.max(1,...l.map(x => x[1])); return l.map(x => `<div class="bal"><span>${esc(x[0])}</span><div><i style="width:${Math.round(x[1]/m*100)}%"></i></div><b>${x[1]}</b></div>`).join("") || "<small>Keine Daten.</small>"; };
+    const bal = l => { const m = Math.max(1,...l.map(x => x[1])); return l.map(x => `<div class="bal"><span>${esc(x[0])}</span><div><i style="width:${Math.round(x[1]/m*100)}%${x[2]?`;background:${x[2]}`:""}"></i></div><b>${x[1]}</b></div>`).join("") || "<small>Keine Daten.</small>"; };
     const jahr = String(new Date().getFullYear());
     const dauern = reports.map(r => (new Date(r.endDate) - new Date(r.date)) / 60000).filter(x => x >= 0);
     const avg = dauern.length ? Math.round(dauern.reduce((a,b) => a+b, 0) / dauern.length) : 0;
@@ -981,7 +1025,7 @@ function renderNeu(){
     if(darf("accidents")) z.push([accidents.length,"Arbeitsunfälle"]);
     $("#stZahlen").innerHTML = z.map(x => `<div class="zahl"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
     const arten = {}; reports.forEach(r => { const k = r.type || "Sonstiges"; arten[k] = (arten[k]||0) + 1; });
-    $("#stArt").innerHTML = bal(Object.entries(arten).sort((a,b) => b[1]-a[1]));
+    $("#stArt").innerHTML = bal(Object.entries(arten).sort((a,b) => b[1]-a[1]).map(([k,v]) => [k,v,ART_FARBE[k]||"#6B7280"]));
     const y = new Date().getFullYear(), m0 = new Date().getMonth(), monate = [];
     for(let i=11;i>=0;i--){ const d = new Date(y,m0-i,1); monate.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")); }
     $("#stMonat").innerHTML = bal(monate.map(m => [m.slice(5)+"/"+m.slice(2,4), reports.filter(r => (r.date||"").startsWith(m)).length]));
@@ -1122,6 +1166,9 @@ $("#pForm").onsubmit = async e => {
     $("#pGrund").value = ""; toast("Rang geändert");
   }catch(err){$("#pMsg").textContent = fehlertext(err)}
 };
+
+const uhr = () => { const d = new Date(); $("#uhr").textContent = d.toLocaleDateString("de-AT",{weekday:"short",day:"2-digit",month:"2-digit"}) + "  " + d.toLocaleTimeString("de-AT"); };
+uhr(); setInterval(uhr, 1000);
 
 function formular(id,msg,col,daten,ok){
   $(id).onsubmit = async e => {
