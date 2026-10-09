@@ -258,6 +258,12 @@ input,select,textarea{box-shadow:inset 0 1px 2px rgba(16,24,40,.06)}
 #toast{display:flex;align-items:center;padding:.8rem 1.2rem}
 #toast::before{content:"";width:.6em;height:.6em;margin-right:.7rem;border-radius:50%;background:#2BD576;box-shadow:0 0 7px #2BD576}
 @media(max-width:800px){main header.hero{padding:1.4rem 1.3rem 1.7rem}main header.hero h2{font-size:2.3rem}}
+
+.bew p{white-space:pre-wrap;margin:.6rem 0}
+.bew .zeile{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:.7rem}
+.bew .zeile select{width:auto}.bew .zeile input{flex:1;min-width:180px}
+.wechsel{margin:1.1rem 0 0;text-align:center;color:var(--muted);font-size:.92rem}
+.wechsel .link{margin:0}
 </style>
 </head>
 <body>
@@ -285,7 +291,21 @@ input,select,textarea{box-shadow:inset 0 1px 2px rgba(16,24,40,.06)}
     <div class="pw"><input id="aPw" type="password" required minlength="6" autocomplete="current-password"><button type="button" class="link" id="pwZeigen" aria-pressed="false">Zeigen</button></div>
     <div class="msg" id="authMsg" role="alert"></div>
     <button class="btn gross" id="authBtn" type="submit">Anmelden</button>
+    <p class="wechsel">Noch kein Mitglied? <button type="button" class="link" id="zuBewerbung">Jetzt bewerben</button></p>
    </form>
+   <form id="bewForm" class="login-karte hidden">
+    <h2>Bewerbung</h2><p class="sub">Erzähl uns kurz von dir. Wir melden uns nach der Sichtung.</p>
+    <label for="bwName">Name</label><input id="bwName" required maxlength="80" autocomplete="name">
+    <label for="bwKontakt">Kontakt (E-Mail oder Discord)</label><input id="bwKontakt" required maxlength="100">
+    <label for="bwAlter">Alter</label><input id="bwAlter" type="number" min="10" max="99" required>
+    <label for="bwErf">Vorerfahrung</label><textarea id="bwErf" rows="3" maxlength="1500" placeholder="optional"></textarea>
+    <label for="bwMot">Warum möchtest du zur Feuerwehr?</label><textarea id="bwMot" rows="4" required maxlength="2000"></textarea>
+    <input id="bwFalle" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
+    <div class="msg" id="bwMsg" role="alert"></div>
+    <button class="btn gross" id="bwBtn" type="submit">Bewerbung abschicken</button>
+    <p class="wechsel"><button type="button" class="link" id="zuLogin">Zurück zur Anmeldung</button></p>
+   </form>
+   <div id="bewDanke" class="login-karte hidden"><h2>Danke!</h2><p class="sub">Deine Bewerbung ist eingegangen. Wir melden uns bei dir.</p><button class="btn gross" type="button" id="bwZurueck">Zur Anmeldung</button></div>
   </div>
  </div>
 </section>
@@ -308,7 +328,7 @@ input,select,textarea{box-shadow:inset 0 1px 2px rgba(16,24,40,.06)}
   <div class="warn"></div>
   <div class="marke"><svg class="emblem" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#C8202B"/><g transform="translate(3 3.2) scale(.75)"><path fill="#fff" d="M12 3c1 3.5-3.5 5-3.5 9.3a3.5 3.5 0 007 0c0-1.7-.8-2.6-1.4-3.6 3 1 4.9 3.4 4.9 6.6a7 7 0 11-14 0C5 9 10 7.5 12 3z"/></g></svg><div><b>Feuerwehr Wien</b><span>Mitgliederportal</span></div></div>
   <nav id="nav">
-   <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></symbol><symbol id="i-mega" viewBox="0 0 24 24"><path d="M3 11v3h4l8 4V7L7 11H3zM18 9a4 4 0 010 6"/></symbol><symbol id="i-cal" viewBox="0 0 24 24"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"/></symbol><symbol id="i-userx" viewBox="0 0 24 24"><path d="M9 11a4 4 0 100-8 4 4 0 000 8zM2 21c0-4 3-6 7-6s7 2 7 6M17 8l5 5M22 8l-5 5"/></symbol><symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3c1 4-4 5-4 10a4 4 0 008 0c0-2-1-3-1-5 3 1 5 4 5 7a8 8 0 01-16 0c0-6 5-8 8-12z"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2zM12 10v5M12 18v.5"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 16v-5M13 16V8M18 16v-3"/></symbol><symbol id="i-award" viewBox="0 0 24 24"><path d="M12 14a6 6 0 100-12 6 6 0 000 12zM8.5 13L7 22l5-3 5 3-1.5-9"/></symbol><symbol id="i-school" viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3zM5 17a3 3 0 013-3h11"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2 1.5a11 11 0 005 5l1.5-2 5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></symbol><symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.5-6 8-6s8 2 8 6"/></symbol><symbol id="i-cog" viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zM12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol></svg>
+   <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></symbol><symbol id="i-mega" viewBox="0 0 24 24"><path d="M3 11v3h4l8 4V7L7 11H3zM18 9a4 4 0 010 6"/></symbol><symbol id="i-cal" viewBox="0 0 24 24"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"/></symbol><symbol id="i-userx" viewBox="0 0 24 24"><path d="M9 11a4 4 0 100-8 4 4 0 000 8zM2 21c0-4 3-6 7-6s7 2 7 6M17 8l5 5M22 8l-5 5"/></symbol><symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3c1 4-4 5-4 10a4 4 0 008 0c0-2-1-3-1-5 3 1 5 4 5 7a8 8 0 01-16 0c0-6 5-8 8-12z"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2zM12 10v5M12 18v.5"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 16v-5M13 16V8M18 16v-3"/></symbol><symbol id="i-award" viewBox="0 0 24 24"><path d="M12 14a6 6 0 100-12 6 6 0 000 12zM8.5 13L7 22l5-3 5 3-1.5-9"/></symbol><symbol id="i-school" viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3zM5 17a3 3 0 013-3h11"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2 1.5a11 11 0 005 5l1.5-2 5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></symbol><symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.5-6 8-6s8 2 8 6"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7"/></symbol><symbol id="i-cog" viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zM12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol></svg>
    <button data-view="start" class="aktiv"><svg class="ic"><use href="#i-home"/></svg><span>Übersicht</span></button>
    <div class="ng">Dienst</div>
    <button data-view="ankuendigungen"><svg class="ic"><use href="#i-mega"/></svg><span>Ankündigungen</span></button>
@@ -323,6 +343,7 @@ input,select,textarea{box-shadow:inset 0 1px 2px rgba(16,24,40,.06)}
    <button data-view="lehrgaenge"><svg class="ic"><use href="#i-school"/></svg><span>Lehrgänge</span></button>
    <button data-view="verwarnungen"><svg class="ic"><use href="#i-shield"/></svg><span>Verwarnungen</span></button>
    <button data-view="dokumente"><svg class="ic"><use href="#i-book"/></svg><span>Dokumente</span></button>
+   <button data-view="bewerbungen" class="hidden"><svg class="ic"><use href="#i-file"/></svg><span>Bewerbungen</span></button>
    <button data-view="telefonbuch"><svg class="ic"><use href="#i-phone"/></svg><span>Telefonbuch</span></button>
    <div class="ng">Konto</div>
    <button data-view="profil"><svg class="ic"><use href="#i-user"/></svg><span>Mein Profil</span></button>
@@ -547,6 +568,13 @@ input,select,textarea{box-shadow:inset 0 1px 2px rgba(16,24,40,.06)}
    <div id="dkListe"></div>
   </section>
 
+  <!-- Bewerbungen -->
+  <section id="v-bewerbungen" class="hidden">
+   <header><h2>Bewerbungen</h2><p>Eingegangene Bewerbungen sichten und bearbeiten.</p></header>
+   <div id="bwChips" class="chips" role="group" aria-label="Nach Status filtern"></div>
+   <div id="bwListe"></div>
+  </section>
+
   <!-- Telefonbuch -->
   <section id="v-telefonbuch" class="hidden">
    <header><h2>Telefonbuch</h2><p>Erreichbarkeit aller aktiven Mitglieder.</p></header>
@@ -677,7 +705,7 @@ const dauer = (a,b) => {
 const fmtDatum = s => s ? new Date(s).toLocaleDateString("de-AT",{dateStyle:"medium"}) : "";
 const fmtTs = t => t && t.toDate ? t.toDate().toLocaleDateString("de-AT",{dateStyle:"medium"}) : "gerade eben";
 
-let me = null, reports = [], promos = [], accidents = [], courses = [], awards = [], warnings = [], users = [], rollen = [], ankuend = [], termine = [], abm = [], dokus = [], view = "start", profilId = null;
+let me = null, reports = [], promos = [], accidents = [], courses = [], awards = [], warnings = [], users = [], rollen = [], ankuend = [], termine = [], abm = [], dokus = [], bewerbungen = [], view = "start", profilId = null;
 const alleRollen = () => [{name:"Mitglied",admin:false,canWarn:false},{name:"Admin",admin:true,canWarn:true},...rollen];
 let userUnsub = null, dataUnsubs = [], dataSig = "";
 
@@ -692,7 +720,7 @@ const BEREICHE = [
 
 // Einzelrechte, die ein Admin pro Mitglied vergeben kann (users/{uid}.rights.<key>; "warn" liegt auf users/{uid}.canWarn).
 // def = Standard, solange der Admin nichts eingestellt hat. Admins dürfen immer alles.
-let artFilter = "";
+let artFilter = "", bewFilter = "";
 const ART_FARBE = {"Brand":"#D1242F","Technischer Einsatz":"#C27C0E","Verkehrsunfall":"#2F6FDE","Brandmeldealarm":"#E8590C","Sonstiges":"#6B7280"};
 const RECHTE = [
   {key:"warn",      label:"Verwarnen",                    def:false},
@@ -701,7 +729,8 @@ const RECHTE = [
   {key:"courses",   label:"Lehrgänge erstellen/vergeben", def:false},
   {key:"docs",      label:"Dokumente erstellen",          def:false},
   {key:"announce",  label:"Ankündigungen schreiben",      def:false},
-  {key:"events",    label:"Termine anlegen",              def:false}
+  {key:"events",    label:"Termine anlegen",              def:false},
+  {key:"applications", label:"Bewerbungen einsehen",     def:false}
 ];
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),3200)}
 function zeige(was){["auth","pending","app"].forEach(id=>$("#"+id).classList.toggle("hidden",id!==was))}
@@ -744,7 +773,7 @@ document.addEventListener("click", async e => {
     if(act==="mitglied-loeschen" && confirm("Dieses Konto löschen? Die Person kann sich danach nicht mehr einloggen.")){await deleteDoc(doc(db,"users",id)); toast("Konto gelöscht")}
     if(act==="rolle-loeschen" && confirm("Rolle entfernen? Bereits vergebene Rollen bleiben bei den Mitgliedern stehen.")){await deleteDoc(doc(db,"roles",id)); toast("Rolle entfernt")}
     if(act==="unfall-loeschen" && confirm("Diesen Arbeitsunfall endgültig löschen?")){await deleteDoc(doc(db,"accidents",id)); toast("Arbeitsunfall gelöscht")}
-    const DEL = {"an-loeschen":["announcements","Ankündigung"],"tm-loeschen":["events","Termin"],"ab-loeschen":["absences","Abmeldung"],"dk-loeschen":["docs","Dokument"]};
+    const DEL = {"an-loeschen":["announcements","Ankündigung"],"tm-loeschen":["events","Termin"],"ab-loeschen":["absences","Abmeldung"],"dk-loeschen":["docs","Dokument"],"bew-loeschen":["applications","Bewerbung"]};
     if(DEL[act] && confirm(`${DEL[act][1]} endgültig löschen?`)){await deleteDoc(doc(db,DEL[act][0],id)); toast(DEL[act][1]+" gelöscht")}
     if(act==="loeschen" && confirm("Diesen Bericht endgültig löschen?")){await deleteDoc(doc(db,"reports",id)); toast("Bericht gelöscht")}
   }catch(err){toast(fehlertext(err))}
@@ -787,7 +816,7 @@ onAuthStateChanged(auth, user => {
 
 function startData(){
   // Nur Daten abonnieren, die das Mitglied sehen darf; bei geänderten Rechten neu starten.
-  const sig = BEREICHE.map(b => darf(b.key)).join() + "|" + darfVerwarnen() + "|" + istAdmin();
+  const sig = BEREICHE.map(b => darf(b.key)).join() + "|" + darfVerwarnen() + "|" + istAdmin() + "|" + kann("applications");
   if(dataUnsubs.length && sig === dataSig) return;
   stopData(); dataSig = sig;
   const f = err => toast(fehlertext(err));
@@ -810,11 +839,12 @@ function startData(){
   const lade = (q,set) => dataUnsubs.push(onSnapshot(q, s => {set(s.docs.map(d=>({id:d.id,...d.data()})));renderAll()}, f));
   lade(query(collection(db,"announcements"),orderBy("createdAt","desc"),limit(50)), v => ankuend=v);
   lade(query(collection(db,"events"),orderBy("start","desc"),limit(200)), v => termine=v);
+  if(kann("applications")) lade(query(collection(db,"applications"),orderBy("createdAt","desc"),limit(200)), v => bewerbungen=v);
   lade(query(collection(db,"docs"),orderBy("title")), v => dokus=v);
   lade(istAdmin() ? query(collection(db,"absences"),orderBy("createdAt","desc"),limit(300)) : query(collection(db,"absences"),where("userUid","==",me.id)), v => abm=v.sort((a,b)=>(b.from||"").localeCompare(a.from||"")));
   if(darf("promotions")) dataUnsubs.push(onSnapshot(query(collection(db,"promotions"),orderBy("createdAt","desc"),limit(100)), s => {promos=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f));
 }
-function stopData(){dataUnsubs.forEach(u=>u());dataUnsubs=[];dataSig="";reports=[];promos=[];accidents=[];courses=[];awards=[];warnings=[];users=[];rollen=[];ankuend=[];termine=[];abm=[];dokus=[]}
+function stopData(){dataUnsubs.forEach(u=>u());dataUnsubs=[];dataSig="";reports=[];promos=[];accidents=[];courses=[];awards=[];warnings=[];users=[];rollen=[];ankuend=[];termine=[];abm=[];dokus=[];bewerbungen=[]}
 const istAdmin = () => me && me.role === "admin";
 // Admins sehen alles. Sonst zählt permissions[key]; fehlt der Eintrag, ist der Bereich erlaubt.
 const darf = key => !!me && (me.role === "admin" || !me.permissions || me.permissions[key] !== false);
@@ -864,10 +894,11 @@ function renderAll(){
   const sperre = BEREICHE.find(b => b.view===view && !darf(b.key));
   if(sperre) view = "start";
   if(view==="statistik" && !darf("reports")) view = "start";
+  if(view==="bewerbungen" && !kann("applications")) view = "start";
   document.querySelector('#nav [data-view="statistik"]').classList.toggle("hidden",!darf("reports"));
   if(view==="profil" && !(users.find(u => u.id===profilId) || (profilId===me.id ? me : null))) view = "start";
   document.querySelectorAll("#nav [data-view]").forEach(b => b.classList.toggle("aktiv",b.dataset.view===view && (view!=="profil" || profilId===me.id)));
-  ["start","ankuendigungen","termine","abmeldungen","statistik","dokumente","berichte","befoerderungen","arbeitsunfaelle","lehrgaenge","verwarnungen","telefonbuch","profil","verwaltung"].forEach(v => $("#v-"+v).classList.toggle("hidden",v!==view));
+  ["start","bewerbungen","ankuendigungen","termine","abmeldungen","statistik","dokumente","berichte","befoerderungen","arbeitsunfaelle","lehrgaenge","verwarnungen","telefonbuch","profil","verwaltung"].forEach(v => $("#v-"+v).classList.toggle("hidden",v!==view));
 
   // Übersicht
   const monat = new Date().toISOString().slice(0,7);
@@ -996,12 +1027,28 @@ function renderAll(){
   renderNeu();
 }
 
+const BEW_ST = {neu:["Neu","rot","#D1242F"],pruefung:["In Prüfung","gelb","#C27C0E"],angenommen:["Angenommen","gruen","#1E7B4A"],abgelehnt:["Abgelehnt","aus","#6B7280"]};
+function renderBew(){
+  const zaehl = k => bewerbungen.filter(b => b.status===k).length;
+  $("#bwChips").innerHTML = ["", ...Object.keys(BEW_ST)].map(k => `<button type="button" class="chip${bewFilter===k?" an":""}" data-bst="${k}" style="--ac:${k?BEW_ST[k][2]:"var(--tag)"}"><i></i>${k?BEW_ST[k][0]:"Alle"} (${k?zaehl(k):bewerbungen.length})</button>`).join("");
+  $("#bwListe").innerHTML = bewerbungen.filter(b => !bewFilter || b.status===bewFilter).map(b => { const st = BEW_ST[b.status] || BEW_ST.neu;
+    return `<article class="bericht bew" style="--ac:${st[2]}"><div class="kopf"><h3>${esc(b.name)}</h3>${istAdmin()?`<button class="btn gefahr klein" data-act="bew-loeschen" data-id="${b.id}" type="button">Löschen</button>`:""}</div>
+    <div class="meta"><span class="led ${st[1]}"></span>${st[0]} · ${esc(b.contact)} · ${esc(b.age)} Jahre · ${fmtTs(b.createdAt)}</div>
+    <p><b>Vorerfahrung</b><br>${esc(b.experience || "–")}</p><p><b>Motivation</b><br>${esc(b.motivation)}</p>
+    <div class="zeile"><select class="bew-status" data-id="${b.id}">${Object.entries(BEW_ST).map(([k,v]) => `<option value="${k}"${k===b.status?" selected":""}>${v[0]}</option>`).join("")}</select>
+    <input class="bew-note" data-id="${b.id}" value="${esc(b.note || "")}" placeholder="Interne Notiz" maxlength="300"></div>
+    ${b.reviewedBy ? `<small>Zuletzt bearbeitet von ${esc(b.reviewedBy)}</small>` : ""}</article>`; }).join("") || `<div class="leer">Keine Bewerbungen.</div>`;
+}
+
 function renderNeu(){
   const std = new Date().getHours();
   $("#gruss").textContent = `${std < 11 ? "Guten Morgen" : std < 18 ? "Guten Tag" : "Guten Abend"}, ${me.name.split(" ")[0]}`;
   $("#grussSub").textContent = [me.rank, me.dienstnummer].filter(Boolean).join(" · ");
   $("#bChips").innerHTML = ["", ...Object.keys(ART_FARBE)].map(k => `<button type="button" class="chip${artFilter===k?" an":""}" data-art="${k}" style="--ac:${k?ART_FARBE[k]:"var(--tag)"}"><i></i>${k||"Alle"}</button>`).join("");
   const adm = istAdmin(), jetzt = new Date().toISOString().slice(0,16);
+  const bn = document.querySelector('#nav [data-view="bewerbungen"]');
+  bn.classList.toggle("hidden", !kann("applications")); bn.classList.toggle("neu", kann("applications") && bewerbungen.some(b => b.status==="neu"));
+  if(view==="bewerbungen") renderBew();
   const loeschen = (act,id) => adm ? `<button class="btn gefahr klein" data-act="${act}" data-id="${id}" type="button">Löschen</button>` : "";
   [["#anForm","announce"],["#tmForm","events"],["#dkForm","docs"],["#bForm","reports"],["#aForm","accidents"]].forEach(([x,k]) => $(x).classList.toggle("hidden",!kann(k)));
 
@@ -1197,6 +1244,25 @@ $("#pForm").onsubmit = async e => {
 };
 
 document.addEventListener("click", e => { const c = e.target.closest("[data-art]"); if(!c) return; artFilter = c.dataset.art; renderAll(); });
+const loginAnsicht = a => { ["authForm","bewForm","bewDanke"].forEach(x => $("#"+x).classList.toggle("hidden", x!==a)); };
+$("#zuBewerbung").onclick = () => loginAnsicht("bewForm");
+$("#zuLogin").onclick = $("#bwZurueck").onclick = () => loginAnsicht("authForm");
+$("#bewForm").onsubmit = async e => {
+  e.preventDefault(); $("#bwMsg").textContent = "";
+  if($("#bwFalle").value){ e.target.reset(); loginAnsicht("bewDanke"); return; } // Spam-Falle
+  const btn = $("#bwBtn"); btn.disabled = true; btn.textContent = "Wird gesendet …";
+  try{
+    await addDoc(collection(db,"applications"),{name:$("#bwName").value.trim(),contact:$("#bwKontakt").value.trim(),age:Number($("#bwAlter").value),experience:$("#bwErf").value.trim(),motivation:$("#bwMot").value.trim(),status:"neu",createdAt:serverTimestamp()});
+    e.target.reset(); loginAnsicht("bewDanke");
+  }catch(err){$("#bwMsg").textContent = "Das hat nicht geklappt. Bitte prüfe deine Angaben und versuche es nochmal."}
+  finally{btn.disabled = false; btn.textContent = "Bewerbung abschicken"}
+};
+document.addEventListener("click", e => { const c = e.target.closest("[data-bst]"); if(!c) return; bewFilter = c.dataset.bst; renderAll(); });
+document.addEventListener("change", async e => {
+  const t = e.target.closest(".bew-status,.bew-note"); if(!t) return;
+  try{ await updateDoc(doc(db,"applications",t.dataset.id),{...(t.classList.contains("bew-status") ? {status:t.value} : {note:t.value.trim()}),reviewedBy:me.name,reviewedAt:serverTimestamp()}); toast("Gespeichert"); }
+  catch(err){ toast(fehlertext(err)); }
+});
 const uhr = () => { const d = new Date(); $("#uhr").textContent = d.toLocaleDateString("de-AT",{weekday:"short",day:"2-digit",month:"2-digit"}) + "  " + d.toLocaleTimeString("de-AT"); };
 uhr(); setInterval(uhr, 1000);
 

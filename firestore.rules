@@ -73,6 +73,23 @@ service cloud.firestore {
       allow delete: if admin() || (aktiv() && resource.data.userUid == request.auth.uid);
     }
 
+    // Bewerbungen: jeder (auch ohne Konto) darf eine einreichen, lesen/bearbeiten nur mit dem Recht "applications"
+    match /applications/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['name','contact','age','experience','motivation','status','createdAt'])
+                    && request.resource.data.status == 'neu'
+                    && request.resource.data.createdAt == request.time
+                    && request.resource.data.name is string && request.resource.data.name.size() > 1 && request.resource.data.name.size() <= 80
+                    && request.resource.data.contact is string && request.resource.data.contact.size() > 2 && request.resource.data.contact.size() <= 100
+                    && request.resource.data.age is int && request.resource.data.age >= 10 && request.resource.data.age <= 99
+                    && request.resource.data.experience is string && request.resource.data.experience.size() <= 1500
+                    && request.resource.data.motivation is string && request.resource.data.motivation.size() > 1 && request.resource.data.motivation.size() <= 2000;
+      allow read: if recht('applications', false);
+      allow update: if recht('applications', false)
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','note','reviewedBy','reviewedAt'])
+                    && request.resource.data.status in ['neu','pruefung','angenommen','abgelehnt'];
+      allow delete: if admin();
+    }
+
     // Zähler für Einsatznummern: darf nur um genau 1 steigen
     match /counters/{id} {
       allow read: if aktiv();
