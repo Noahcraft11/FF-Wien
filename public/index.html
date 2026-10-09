@@ -1254,7 +1254,7 @@ $("#bewForm").onsubmit = async e => {
   try{
     await addDoc(collection(db,"applications"),{name:$("#bwName").value.trim(),contact:$("#bwKontakt").value.trim(),age:Number($("#bwAlter").value),experience:$("#bwErf").value.trim(),motivation:$("#bwMot").value.trim(),status:"neu",createdAt:serverTimestamp()});
     e.target.reset(); loginAnsicht("bewDanke");
-  }catch(err){$("#bwMsg").textContent = "Das hat nicht geklappt. Bitte prüfe deine Angaben und versuche es nochmal."}
+  }catch(err){console.error("Bewerbung:",err); $("#bwMsg").textContent = `Das hat nicht geklappt (Fehlercode: ${err.code || "unbekannt"}). Bitte versuche es nochmal.`}
   finally{btn.disabled = false; btn.textContent = "Bewerbung abschicken"}
 };
 document.addEventListener("click", e => { const c = e.target.closest("[data-bst]"); if(!c) return; bewFilter = c.dataset.bst; renderAll(); });

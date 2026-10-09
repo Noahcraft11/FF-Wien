@@ -77,10 +77,10 @@ service cloud.firestore {
     match /applications/{id} {
       allow create: if request.resource.data.keys().hasOnly(['name','contact','age','experience','motivation','status','createdAt'])
                     && request.resource.data.status == 'neu'
-                    && request.resource.data.createdAt == request.time
+                    && request.resource.data.createdAt is timestamp
                     && request.resource.data.name is string && request.resource.data.name.size() > 1 && request.resource.data.name.size() <= 80
                     && request.resource.data.contact is string && request.resource.data.contact.size() > 2 && request.resource.data.contact.size() <= 100
-                    && request.resource.data.age is int && request.resource.data.age >= 10 && request.resource.data.age <= 99
+                    && request.resource.data.age is number && request.resource.data.age >= 10 && request.resource.data.age <= 99
                     && request.resource.data.experience is string && request.resource.data.experience.size() <= 1500
                     && request.resource.data.motivation is string && request.resource.data.motivation.size() > 1 && request.resource.data.motivation.size() <= 2000;
       allow read: if recht('applications', false);
