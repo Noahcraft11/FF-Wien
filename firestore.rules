@@ -1,0 +1,119 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    function ich()   { return get(/databases/$(db)/documents/users/$(request.auth.uid)).data; }
+    function aktiv() { return request.auth != null && ich().active == true; }
+    function admin() { return aktiv() && ich().role == 'admin'; }
+    // Einzelrechte aus users/{uid}.rights; def = Standard, wenn der Admin nichts eingestellt hat
+    function recht(k, def) { return admin() || (aktiv() && ich().get('rights', {}).get(k, def) == true); }
+    function warnen()      { return admin() || (aktiv() && ich().get('canWarn', false) == true); }
+
+    // Mitglieder: Admin legt Konten an und ändert alles; jedes Mitglied darf nur die eigene Telefonnummer ändern
+    match /users/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || aktiv());
+      allow create: if admin()
+                    || (request.auth.uid == uid
+                        && request.resource.data.role == 'member'
+                        && request.resource.data.active == false);
+      allow update: if admin()
+                    || (aktiv() && request.auth.uid == uid
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['phone']));
+      allow delete: if admin();
+    }
+
+    match /roles/{id} {
+      allow read: if aktiv();
+      allow write: if admin();
+    }
+
+    match /reports/{id} {
+      allow read: if aktiv();
+      allow create: if recht('reports', true) && request.resource.data.authorUid == request.auth.uid;
+      allow update, delete: if admin();
+    }
+
+    match /promotions/{id} {
+      allow read: if aktiv();
+      allow create: if admin();
+    }
+
+    match /accidents/{id} {
+      allow read: if aktiv();
+      allow create: if recht('accidents', true) && request.resource.data.authorUid == request.auth.uid;
+      allow update, delete: if admin();
+    }
+
+    match /courses/{id} {
+      allow read: if aktiv();
+      allow create: if recht('courses', false);
+      allow update, delete: if admin();
+    }
+
+    match /courseAwards/{id} {
+      allow read: if aktiv();
+      allow create: if recht('courses', false);
+      allow delete: if admin();
+    }
+
+    // Verwarnen: wer verwarnen darf sieht alle, alle anderen nur die eigenen
+    match /warnings/{id} {
+      allow read: if aktiv() && (warnen() || resource.data.userUid == request.auth.uid);
+      allow create: if warnen();
+      allow delete: if admin();
+    }
+
+    match /announcements/{id} { allow read: if aktiv(); allow create, update: if recht('announce', false); allow delete: if admin(); }
+    match /events/{id}        { allow read: if aktiv(); allow create, update: if recht('events', false);   allow delete: if admin(); }
+    match /docs/{id}          { allow read: if aktiv(); allow create, update: if recht('docs', false);     allow delete: if admin(); }
+
+    match /absences/{id} {
+      allow read: if admin() || (aktiv() && resource.data.userUid == request.auth.uid);
+      allow create: if aktiv() && request.resource.data.userUid == request.auth.uid;
+      allow delete: if admin() || (aktiv() && resource.data.userUid == request.auth.uid);
+    }
+
+    // Bewerbungen: jeder (auch ohne Konto) darf eine einreichen, lesen/bearbeiten nur mit dem Recht "applications"
+    match /applications/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['name','contact','age','bereich','verfuegbar','experience','motivation','regeln','code','status','createdAt'])
+                    && request.resource.data.keys().hasAll(['name','contact','age','bereich','verfuegbar','experience','motivation','regeln','code','status','createdAt'])
+                    && id.matches('[A-Z0-9]{8}') && request.resource.data.code == id
+                    && request.resource.data.status == 'neu'
+                    && request.resource.data.createdAt == request.time
+                    && request.resource.data.regeln == true
+                    && request.resource.data.bereich in ['Streckendienst','Verkehrsmanagement','Egal']
+                    && request.resource.data.verfuegbar in ['Täglich','Wochentags','Wochenende','Flexibel']
+                    && request.resource.data.name is string && request.resource.data.name.size() > 1 && request.resource.data.name.size() <= 80
+                    && request.resource.data.contact is string && request.resource.data.contact.size() > 2 && request.resource.data.contact.size() <= 100
+                    && request.resource.data.age is number && request.resource.data.age >= 10 && request.resource.data.age <= 99
+                    && request.resource.data.experience is string && request.resource.data.experience.size() <= 1500
+                    && request.resource.data.motivation is string && request.resource.data.motivation.size() >= 40 && request.resource.data.motivation.size() <= 2000;
+      allow read: if recht('applications', false);
+      allow update: if recht('applications', false)
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','note','reply','reviewedBy','reviewedAt'])
+                    && request.resource.data.status in ['neu','pruefung','gespraech','angenommen','abgelehnt'];
+      allow delete: if admin();
+    }
+
+    // Statusabfrage für Bewerber: nur per Nummer abrufbar (get), nicht auflistbar
+    match /applicationStatus/{id} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if recht('applications', false)
+                    || (id.matches('[A-Z0-9]{8}') && request.resource.data.keys().hasOnly(['status','reply','createdAt'])
+                        && request.resource.data.status == 'neu' && request.resource.data.reply == '' && request.resource.data.createdAt == request.time);
+      allow update: if recht('applications', false)
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reply','updatedAt'])
+                    && request.resource.data.status in ['neu','pruefung','gespraech','angenommen','abgelehnt']
+                    && request.resource.data.reply is string && request.resource.data.reply.size() <= 300;
+      allow delete: if admin();
+    }
+
+    // Zähler für Einsatznummern: darf nur um genau 1 steigen
+    match /counters/{id} {
+      allow read: if aktiv();
+      allow create: if recht('reports', true) && request.resource.data.n == 1;
+      allow update: if recht('reports', true) && request.resource.data.n == resource.data.n + 1;
+    }
+  }
+}

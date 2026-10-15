@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="de-AT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<title>ÖSAG · Mitgliederportal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=Doto:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+--rot:#00873C;--rot-d:#006B2F;--gelb:#F4C300;--ok:#1E7B4A;
+--bg:#F2F3F5;--surface:#fff;--surface-2:#F7F8F9;--border:#E0E3E7;--border-strong:#BFC4CA;
+--text:#1B1D21;--muted:#5F666E;--input-bg:#fff;--hover:#ECEEF1;--err:#9E1720;--link:#006B2F;--tag:#2B2F35;
+--side:#22252A;--side-hover:#2E3238;--side-border:#3A3F46;
+--shadow:0 1px 2px rgba(16,24,40,.05),0 2px 6px rgba(16,24,40,.06);
+--kopf:"Barlow Condensed","Arial Narrow",sans-serif;--fließ:"Barlow",system-ui,sans-serif;
+color-scheme:light}
+/* Dunkles Design: automatisch nach Systemeinstellung, per Schalter in der Seitenleiste überschreibbar */
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121417;--surface:#1B1E23;--surface-2:#21252B;--border:#2B3037;--border-strong:#464C55;--text:#E9EBEE;--muted:#9BA2AB;--input-bg:#15181C;--hover:#292D34;--err:#FF8A91;--link:#5FD68A;--tag:#3B4149;--ok:#4CC38A;--side:#0D0F12;--side-hover:#1C2026;--side-border:#2A2F36;--shadow:0 1px 2px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.35);color-scheme:dark;}}
+:root[data-theme="dark"]{--bg:#121417;--surface:#1B1E23;--surface-2:#21252B;--border:#2B3037;--border-strong:#464C55;--text:#E9EBEE;--muted:#9BA2AB;--input-bg:#15181C;--hover:#292D34;--err:#FF8A91;--link:#5FD68A;--tag:#3B4149;--ok:#4CC38A;--side:#0D0F12;--side-hover:#1C2026;--side-border:#2A2F36;--shadow:0 1px 2px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.35);color-scheme:dark;}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font:16px/1.55 var(--fließ);color:var(--text);background:var(--bg);transition:background .2s,color .2s}
+h1,h2,h3{font-family:var(--kopf);margin:0;line-height:1.1;letter-spacing:.2px}
+h1{font-size:2.4rem}h2{font-size:2rem}h3{font-size:1.3rem}
+:focus-visible{outline:3px solid var(--rot);outline-offset:2px}
+.hidden{display:none!important}
+.warn{height:12px;background:repeating-linear-gradient(-45deg,var(--rot) 0 14px,#fff 14px 28px)}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea{width:100%;padding:.62rem .75rem;border:1.5px solid var(--border-strong);border-radius:6px;background:var(--input-bg);transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--rot);box-shadow:0 0 0 3px rgba(0,135,60,.2)}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:.85}
+input[type=checkbox]{accent-color:var(--rot)}
+label{display:block;font-weight:600;font-size:.9rem;margin:.9rem 0 .25rem}
+.btn{background:var(--rot);color:#fff;border:0;border-radius:6px;padding:.65rem 1.15rem;font-weight:600;cursor:pointer;transition:background .15s,transform .05s}
+.btn:hover{background:var(--rot-d)}
+.btn:active{transform:translateY(1px)}
+.btn.sek{background:var(--surface);color:var(--text);border:1.5px solid var(--border-strong)}
+.btn.sek:hover{background:var(--hover)}
+.btn.klein{padding:.3rem .75rem;font-size:.85rem}
+.btn.gefahr{background:transparent;color:var(--err);border:1.5px solid var(--err)}
+.btn.gefahr:hover{background:var(--err);color:var(--surface)}
+.msg{color:var(--err);font-size:.9rem;min-height:1.3rem;margin-top:.6rem}
+
+/* Anmeldung */
+#auth,#pending{min-height:100vh;display:grid;place-items:center;padding:1rem;background:radial-gradient(1200px 600px at 50% -10%,#3A3F47 0,var(--side) 62%)}
+.karte-login{background:var(--surface);width:100%;max-width:420px;border-radius:10px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.45)}
+.karte-login .inhalt{padding:1.6rem 1.6rem 1.8rem}
+.karte-login p.sub{color:var(--muted);margin:.3rem 0 .5rem}
+.link{background:none;border:0;color:var(--link);text-decoration:underline;cursor:pointer;padding:0;margin-top:1rem}
+.namelink{background:none;border:0;padding:0;color:var(--link);font-weight:600;text-decoration:underline;cursor:pointer;text-align:left}
+
+/* App-Rahmen */
+#app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+aside{background:var(--side);color:#fff;display:flex;flex-direction:column;border-right:1px solid var(--side-border);position:sticky;top:0;height:100vh;overflow-y:auto}
+aside .marke{padding:1.3rem 1.2rem 1rem}
+aside .marke b{font:700 1.55rem/1 var(--kopf);display:block;letter-spacing:.3px}
+aside .marke span{color:#B9BDC4;font-size:.85rem}
+nav{display:flex;flex-direction:column;padding:.5rem .6rem;gap:2px;flex:1}
+nav button{background:none;border:0;border-radius:6px;color:#D2D6DB;text-align:left;padding:.7rem .9rem;cursor:pointer;border-left:4px solid transparent;font-weight:500;transition:background .15s,color .15s}
+nav button:hover{background:var(--side-hover);color:#fff}
+nav button.aktiv{color:#fff;border-left-color:var(--rot);background:var(--side-hover)}
+aside :focus-visible{outline-color:var(--gelb)}
+.ich{padding:1rem 1.2rem;border-top:1px solid var(--side-border);font-size:.9rem}
+.ich small{display:block;color:#B9BDC4}
+.ich-btns{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem}
+.ich .btn.sek{background:transparent;color:#E6E8EB;border-color:#555B64}
+.ich .btn.sek:hover{background:var(--side-hover)}
+main{padding:2rem clamp(1rem,3vw,2.5rem) 3rem;max-width:1100px;width:100%}
+main header{margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}
+main header::before{content:"";display:block;width:44px;height:4px;background:var(--rot);border-radius:2px;margin-bottom:.7rem}
+main header p{margin:.3rem 0 0;color:var(--muted)}
+
+/* Inhalt */
+.zahlen{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;margin-bottom:2rem}
+.zahl{background:var(--surface);border:1px solid var(--border);border-top:4px solid var(--rot);border-radius:8px;padding:.9rem 1rem;box-shadow:var(--shadow)}
+.zahl b{font:700 2.6rem/1 var(--kopf);display:block}
+.zahl span{color:var(--muted);font-size:.9rem}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.3rem;margin-bottom:1.5rem;box-shadow:var(--shadow)}
+.zeile2{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem}
+.bericht{background:var(--surface);border:1px solid var(--border);border-left:6px solid var(--rot);border-radius:8px;padding:.95rem 1.15rem;margin-bottom:.9rem;box-shadow:var(--shadow)}
+.bericht .kopf{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start}
+.bericht .meta{color:var(--muted);font-size:.88rem;margin:.25rem 0 .55rem}
+.bericht p{margin:0 0 .3rem;white-space:pre-wrap}
+.tag{display:inline-block;background:var(--tag);color:#fff;font-size:.78rem;font-weight:600;padding:.12rem .55rem;border-radius:4px;margin:0 .4rem .2rem 0}
+.tag.mittel{background:#B26A00}.tag.schwer{background:var(--rot)}
+.tabelle{overflow-x:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{padding:.65rem .85rem;text-align:left;border-bottom:1px solid var(--border);font-size:.95rem}
+th{background:var(--surface-2);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+tbody tr:hover{background:var(--surface-2)}
+tbody tr:last-child td{border-bottom:0}
+.status{font-weight:600}.status.an{color:var(--ok)}.status.aus{color:var(--err)}
+.leer{color:var(--muted);padding:1.2rem;background:var(--surface);border:1px dashed var(--border-strong);border-radius:8px}
+.log{list-style:none;margin:0;padding:0}
+.log li{padding:.6rem 0;border-bottom:1px solid var(--border)}
+.log li:last-child{border-bottom:0}
+.perm{display:flex;flex-direction:column;gap:.15rem;min-width:150px}
+.perm label{display:flex;align-items:center;gap:.45rem;margin:0;font-weight:500;font-size:.88rem;cursor:pointer}
+.perm input[type=checkbox]{width:auto;padding:0;margin:0}
+.perm input:disabled+span{color:var(--muted)}
+.crew{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.1rem .8rem;max-height:200px;overflow:auto;border:1.5px solid var(--border-strong);border-radius:6px;background:var(--input-bg);padding:.4rem .6rem}
+.crew label{display:flex;align-items:center;gap:.45rem;margin:0;font-weight:500;font-size:.9rem;cursor:pointer}
+.crew input{width:auto;padding:0;margin:0}
+#toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);background:var(--side);color:#fff;padding:.7rem 1.1rem;border-radius:6px;z-index:9;border:1px solid var(--side-border);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+
+@media(max-width:800px){
+ #app{grid-template-columns:1fr}
+ aside{position:sticky;top:0;z-index:5;height:auto;overflow:visible}
+ nav{flex-direction:row;overflow-x:auto;padding:0 .4rem;gap:0}
+ nav button{border-left:0;border-bottom:4px solid transparent;border-radius:0;white-space:nowrap}
+ nav button.aktiv{border-bottom-color:var(--rot)}
+ .ich{display:flex;justify-content:space-between;align-items:center;padding:.5rem 1rem}
+ .ich-btns{margin:0}
+ .zeile2{grid-template-columns:1fr}
+}
+.bal{display:grid;grid-template-columns:minmax(90px,1fr) 3fr auto;gap:.6rem;align-items:center;margin:.35rem 0;font-size:.9rem}
+.bal div{background:var(--surface-2);border-radius:3px}
+.bal i{display:block;height:12px;border-radius:3px;background:var(--rot)}
+details.bericht summary{cursor:pointer;font:600 1.3rem var(--kopf)}
+/* LED-Elemente */
+.lichtbalken{display:flex;gap:3px;padding:6px 10px;background:#0A0C0F}
+.lichtbalken i{flex:1;height:7px;border-radius:2px;background:#3A2400}
+.lichtbalken i:nth-child(odd){animation:ledA 1s steps(1) infinite}
+.lichtbalken i:nth-child(even){animation:ledB 1s steps(1) infinite}
+@keyframes ledA{0%{background:#FFA000;box-shadow:0 0 8px 1px rgba(255,160,0,.75)}50%{background:#3A2400;box-shadow:none}}
+@keyframes ledB{0%{background:#3A2400;box-shadow:none}50%{background:#FFA000;box-shadow:0 0 8px 1px rgba(255,160,0,.75)}}
+.led-tafel{position:relative;overflow:hidden;margin-bottom:1.5rem;padding:.7rem 0;background:#0A0A0A;border:2px solid #2B2B2B;border-radius:6px;box-shadow:inset 0 0 14px #000}
+.led-tafel::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(rgba(0,0,0,.6) 1px,transparent 1.6px) 0 0/3px 3px}
+.led-text{display:inline-block;white-space:nowrap;padding-left:100%;font:900 1.5rem/1 "Doto",ui-monospace,monospace;color:#FFB000;text-shadow:0 0 7px rgba(255,140,0,.65);animation:lauf var(--dauer,30s) linear infinite}
+.led-tafel:hover .led-text{animation-play-state:paused}
+@keyframes lauf{to{transform:translateX(-100%)}}
+.zahl b{font-family:"Doto",var(--kopf);font-weight:900}
+.led{display:inline-block;width:.65em;height:.65em;margin-right:.4rem;border-radius:50%;vertical-align:baseline}
+.led.gruen{background:#2BD576;box-shadow:0 0 6px 1px rgba(43,213,118,.7)}
+.led.gelb{background:#FFB000;box-shadow:0 0 6px 1px rgba(255,176,0,.7)}
+.led.rot{background:#FF3B3B;box-shadow:0 0 6px 1px rgba(255,59,59,.7)}
+.led.aus{background:#5A6068}
+nav button.neu::after{content:"";display:inline-block;width:8px;height:8px;margin-left:.55rem;border-radius:50%;background:#FF3B3B;box-shadow:0 0 8px 1px rgba(255,59,59,.8);animation:puls 1.4s ease-in-out infinite}
+@keyframes puls{50%{opacity:.25}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}
+ .lichtbalken i,nav button.neu::after{animation:none!important}
+ .lichtbalken i:nth-child(odd){background:#FFA000}
+ .led-text{animation:none!important;display:block;padding:0 1rem;white-space:normal}}
+
+/* ===== Neues Erscheinungsbild ===== */
+:root{--r:12px}
+body{background:radial-gradient(900px 420px at 72% -140px,rgba(0,135,60,.08),transparent 70%) top/100% 460px no-repeat,var(--bg)}
+input,select,textarea{border-radius:9px;padding:.7rem .85rem}
+.btn{border-radius:9px;padding:.7rem 1.3rem;background:linear-gradient(180deg,#12A04F,var(--rot) 55%,var(--rot-d));box-shadow:0 1px 0 rgba(255,255,255,.22) inset,0 3px 8px rgba(158,23,32,.3)}
+.btn:hover{background:linear-gradient(180deg,#17A857,#0B8F43 55%,var(--rot-d))}
+.btn.sek{background:var(--surface);box-shadow:none}.btn.sek:hover{background:var(--hover)}
+.btn.gefahr{background:transparent;box-shadow:none}.btn.gefahr:hover{background:var(--err)}
+.panel,.bericht,.zahl,.tabelle,.leer{border-radius:var(--r)}
+.panel{padding:1.4rem 1.5rem}
+.panel h3{margin-bottom:.15rem}
+.bericht{padding:1.05rem 1.25rem}
+.tag{border-radius:6px}
+.zahl{padding:1rem 1.15rem;background:linear-gradient(180deg,var(--surface),var(--surface-2))}
+.zahl b{font-size:2.9rem;color:var(--link)}
+main header h2{font-size:2.5rem}
+main header::before{width:60px;height:5px}
+aside{background:linear-gradient(180deg,color-mix(in srgb,var(--side) 86%,#fff),var(--side) 55%)}
+aside .marke{display:flex;align-items:center;gap:.75rem}
+.emblem{width:42px;height:42px;flex:none;filter:drop-shadow(0 0 10px rgba(0,135,60,.55))}
+@media(min-width:801px){nav button{border-radius:10px}nav button.aktiv{background:linear-gradient(90deg,rgba(0,135,60,.32),var(--side-hover) 75%)}}
+#toast{border-radius:10px}
+
+/* Anmeldung */
+#auth{display:block;padding:0;background:var(--bg)}
+.login{min-height:100vh;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(360px,.8fr)}
+.login-bild{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;color:#fff;background:radial-gradient(800px 520px at 100% 100%,rgba(0,135,60,.38),transparent 62%),#0C0E11}
+.login-bild>*{position:relative;z-index:1}
+.login-titel{flex:1;display:flex;flex-direction:column;justify-content:center}
+.lichtbalken.gross{padding:12px 16px;gap:4px}
+.lichtbalken.gross i{height:12px;border-radius:3px}
+.lichtbalken.gross i:nth-child(-n+6){animation:ledA 1s steps(1) infinite}
+.lichtbalken.gross i:nth-child(n+7){animation:ledB 1s steps(1) infinite}
+.login-titel{padding:2rem clamp(1.5rem,6vw,5rem)}
+.login-titel .emblem{width:64px;height:64px;margin-bottom:1.4rem}
+.login-titel h1{font-size:clamp(3.6rem,9vw,7.4rem);line-height:.88;letter-spacing:.5px}
+.login-titel p{max-width:30ch;margin:1.3rem 0 0;color:#B9BDC4;font-size:1.15rem}
+.login-bild .led-tafel{margin:0;border-radius:0;border-width:2px 0}
+.warn.hoch{height:18px}
+.login-form{display:grid;place-items:center;padding:2rem 1.2rem}
+.login-karte{width:100%;max-width:410px;background:var(--surface);border:1px solid var(--border);border-top:5px solid var(--rot);border-radius:16px;padding:2.1rem 1.9rem 1.9rem;box-shadow:0 28px 60px rgba(16,24,40,.2)}
+.login-karte h2{font-size:2.6rem}
+.login-karte .sub{color:var(--muted);margin:.35rem 0 .6rem}
+.login-karte input{padding:.8rem .9rem;font-size:1.02rem}
+.pw{position:relative}.pw input{padding-right:5.6rem}
+.pw .link{position:absolute;right:.9rem;top:50%;transform:translateY(-50%);margin:0;font-size:.85rem}
+.btn.gross{width:100%;margin-top:.5rem;padding:.9rem;font-size:1.08rem}
+.btn:disabled{opacity:.7;cursor:wait}
+#pending .karte-login{border-radius:16px}
+@media(max-width:800px){.login{grid-template-columns:1fr}.login-titel{padding:1.4rem}.login-titel .emblem{width:46px;height:46px;margin-bottom:.8rem}.login-titel h1{font-size:3.4rem}.login-titel p{display:none}.login-form{padding:1.5rem 1rem 2.5rem}}
+@media(prefers-reduced-motion:reduce){.login-bild::before,.login-bild::after,.lichtbalken.gross i{animation:none!important}.lichtbalken.gross i:nth-child(-n+6){background:#FFA000}}
+
+/* ===== Design-Überarbeitung 2 ===== */
+body{font-size:16.5px}
+#app{grid-template-columns:268px 1fr}
+main{max-width:1180px;padding:1.6rem clamp(1rem,3.2vw,3rem) 4rem}
+aside .marke{padding:1.4rem 1.3rem 1.1rem}
+aside .marke b{font-size:1.7rem}
+nav{padding:.3rem .8rem 1rem;gap:3px}
+nav button{display:flex;align-items:center;gap:.75rem;padding:.62rem .85rem;font-size:.97rem;border-left-width:0}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+nav button.aktiv .ic{color:#5FD68A;opacity:1}
+nav button.aktiv{box-shadow:inset 3px 0 0 var(--rot)}
+nav button.neu::after{margin-left:auto}
+.ng{padding:1.1rem .9rem .35rem;font:600 .8rem var(--fließ);color:#8B929B;letter-spacing:.03em}
+.ich{padding:1rem 1.2rem 1.1rem;background:rgba(0,0,0,.18)}
+.ich-kopf{display:flex;align-items:center;gap:.75rem}
+.avatar{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;font:700 1.05rem var(--kopf);color:#fff;background:linear-gradient(135deg,#17A857,#005526);box-shadow:0 0 0 2px var(--side-border)}
+.uhr-leiste{display:flex;justify-content:flex-end;margin-bottom:.2rem}
+#uhr{font:900 1.05rem/1 "Doto",ui-monospace,monospace;color:#FFB000;background:#0A0A0A;padding:.4rem .85rem;border:1px solid #2B2B2B;border-radius:8px;text-shadow:0 0 6px rgba(255,140,0,.6);box-shadow:inset 0 0 8px #000}
+main header{margin-bottom:1.8rem}
+main header h2{font-size:2.7rem;letter-spacing:.3px}
+main header p{font-size:1.02rem}
+.panel>h3{padding-bottom:.7rem;margin-bottom:.4rem;border-bottom:1px solid var(--border)}
+.panel{box-shadow:0 1px 2px rgba(16,24,40,.05),0 8px 24px rgba(16,24,40,.06)}
+.bericht{box-shadow:0 1px 2px rgba(16,24,40,.05),0 4px 14px rgba(16,24,40,.05)}
+.bericht .kopf h3{font-size:1.45rem}
+.bericht[style*="--ac"]{border-left-color:var(--ac);background:linear-gradient(90deg,color-mix(in srgb,var(--ac) 10%,var(--surface)),var(--surface) 42%)}
+.tag.art{background:var(--ac)}
+.tag.nr{background:transparent;color:var(--ac);border:1.5px solid var(--ac);font:900 .95rem/1.2 "Doto",ui-monospace,monospace;letter-spacing:.05em;padding:.05rem .5rem;vertical-align:middle}
+.zahl{border-top-width:5px}
+.zahl span{font-size:.95rem}
+tbody tr:nth-child(even){background:var(--surface-2)}
+th{padding:.8rem .9rem}
+.leer{text-align:center;padding:1.8rem 1.2rem;border-radius:var(--r)}
+input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,135,60,.18)}
+::selection{background:rgba(0,135,60,.28)}
+@media(max-width:800px){#app{grid-template-columns:1fr}.ng{display:none}.ich-kopf small{display:none}.uhr-leiste{display:none}nav button{padding:.7rem .8rem}nav button span{font-size:.9rem}main header h2{font-size:2.2rem}}
+
+/* ===== Design-Überarbeitung 3 ===== */
+body{background:radial-gradient(900px 420px at 72% -140px,rgba(0,135,60,.1),transparent 70%) top/100% 460px no-repeat,radial-gradient(rgba(127,127,127,.16) 1px,transparent 1.2px) 0 0/22px 22px,var(--bg)}
+main header.hero{position:relative;overflow:hidden;padding:2.1rem 2.3rem 2.4rem;border:0;border-radius:18px;color:#fff;background:radial-gradient(520px 260px at 100% 0%,rgba(0,135,60,.55),transparent 70%),linear-gradient(135deg,#1B1E23,#0C0E11);box-shadow:0 16px 40px rgba(16,24,40,.28)}
+main header.hero::before{display:none}
+main header.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:8px;background:repeating-linear-gradient(-45deg,var(--rot) 0 14px,#fff 14px 28px)}
+main header.hero h2{font-size:3.3rem;line-height:1}
+main header.hero p{margin-top:.5rem;color:#B9BDC4;font-size:1.1rem}
+.zahlen .zahl:nth-child(4n+2){border-top-color:#C27C0E}
+.zahlen .zahl:nth-child(4n+3){border-top-color:#2F6FDE}
+.zahlen .zahl:nth-child(4n+4){border-top-color:#1E7B4A}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1.1rem}
+.chip{display:inline-flex;align-items:center;gap:.5rem;padding:.38rem .9rem;border:1.5px solid var(--border-strong);border-radius:999px;background:var(--surface);font-size:.88rem;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s}
+.chip i{width:.65em;height:.65em;border-radius:50%;background:var(--ac)}
+.chip:hover{background:var(--hover)}
+.chip.an{background:var(--ac);border-color:var(--ac);color:#fff}.chip.an i{background:#fff}
+label{color:var(--muted);font-size:.86rem;margin:1.05rem 0 .3rem}
+input,select,textarea{box-shadow:inset 0 1px 2px rgba(16,24,40,.06)}
+.panel{border-radius:16px}
+.bericht{border-radius:14px}
+#toast{display:flex;align-items:center;padding:.8rem 1.2rem}
+#toast::before{content:"";width:.6em;height:.6em;margin-right:.7rem;border-radius:50%;background:#2BD576;box-shadow:0 0 7px #2BD576}
+@media(max-width:800px){main header.hero{padding:1.4rem 1.3rem 1.7rem}main header.hero h2{font-size:2.3rem}}
+
+.bew p{white-space:pre-wrap;margin:.6rem 0}
+.bew .zeile{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:.7rem}
+.bew .zeile select{width:auto}.bew .zeile input{flex:1;min-width:180px}
+.wechsel{margin:1.1rem 0 0;text-align:center;color:var(--muted);font-size:.92rem}
+.wechsel .link{margin:0}
+
+/* ===== ÖSAG ===== */
+.tag.schwer{background:#C8202B}
+.warn{background:repeating-linear-gradient(-45deg,#F28C00 0 14px,#fff 14px 28px)}
+main header.hero::after{background:repeating-linear-gradient(-45deg,#F28C00 0 14px,#fff 14px 28px)}
+.login-bild::before{content:"";position:absolute;right:-6%;top:46%;width:min(55vw,500px);aspect-ratio:1;transform:translateY(-50%);opacity:.07;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M10 3h4l5.5 18h-15z'/%3E%3C/svg%3E") center/contain no-repeat}
+main header.hero::before{display:block;content:"";position:absolute;left:auto;right:1.6rem;top:50%;width:140px;height:140px;margin:0;border-radius:0;transform:translateY(-50%);opacity:.1;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M10 3h4l5.5 18h-15z'/%3E%3C/svg%3E") center/contain no-repeat}
+main header.hero>*{position:relative;z-index:1}
+@media(max-width:800px){main header.hero::before{width:90px;height:90px;right:.8rem}}
+
+/* Bewerbungssystem */
+.schritte{display:flex;gap:.4rem;list-style:none;margin:.9rem 0 .2rem;padding:0}
+.schritte li{flex:1;font-size:.82rem;font-weight:600;color:var(--muted);padding-top:.45rem;border-top:4px solid var(--border-strong)}
+.schritte li.an{color:var(--text);border-color:var(--rot)}.schritte li.ok{border-color:var(--ok)}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+.zaehl{float:right;font-weight:400;color:var(--muted)}
+label.haken{display:flex;gap:.6rem;align-items:flex-start;font-weight:500;margin-top:1.1rem}label.haken input{width:auto;margin-top:.25rem}
+.bw-knoepfe{display:flex;gap:.6rem;margin-top:.6rem}.bw-knoepfe .btn{flex:1}
+.bw-code{font:700 2.1rem/1 var(--kopf);letter-spacing:.12em;text-align:center;padding:1rem;margin:1rem 0;border:2px dashed var(--border-strong);border-radius:10px}
+#bewDanke .btn{width:100%;margin-top:.6rem}
+.stat{border-left:6px solid var(--ac);background:var(--surface-2);border-radius:8px;padding:.7rem 1rem;margin-top:1rem}.stat p{margin:.3rem 0 0}
+.bw-leiste{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:.9rem}.bw-leiste input{flex:1;min-width:220px}
+.bw-stat{color:var(--muted);font-size:.9rem}.bw-stat b{color:var(--err)}
+.bew .pkt{display:inline-block;width:.7em;height:.7em;border-radius:50%;margin-right:.4rem}
+.bew .code{font:600 .85rem var(--fließ);padding:.1rem .5rem;border:1px solid var(--border-strong);border-radius:999px;color:var(--muted);white-space:nowrap}
+.bew .fakten{display:flex;flex-wrap:wrap;gap:.4rem;margin:.4rem 0}.bew .fakten span{background:var(--hover);border-radius:6px;padding:.1rem .55rem;font-size:.85rem}
+.bew .alt{color:var(--err);font-weight:600}.bew .bw-akt{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.8rem}
+.bew .chip{font-size:.82rem;padding:.25rem .75rem}.bew label{margin:.8rem 0 .2rem}
+</style>
+</head>
+<body>
+
+<!-- Anmeldung -->
+<section id="auth" class="hidden">
+ <div class="login">
+  <div class="login-bild">
+   <div class="login-titel">
+    <svg class="emblem" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#00873C"/><path fill="#fff" d="M10.2 4.5h3.6l4.6 15H5.6z"/><path stroke="#00873C" stroke-width="1.1" stroke-dasharray="2 1.6" fill="none" d="M12 5v14.5"/></svg>
+    <h1>ÖSAG<br>Streckendienst</h1>
+    <p>Einsatzberichte, Termine und Dienstverwaltung an einem Ort.</p>
+   </div>
+   <div>
+    <div class="led-tafel" aria-hidden="true"><div class="led-text" style="--dauer:26s">Einsatzberichte +++ Termine und Übungen +++ Lehrgänge +++ Dokumente und Regelwerk +++ Abmeldungen</div></div>
+    <div class="warn hoch"></div>
+   </div>
+  </div>
+  <div class="login-form">
+   <form id="authForm" class="login-karte">
+    <h2>Anmelden</h2>
+    <p class="sub" id="authSub">Konten legt ein Admin der ÖSAG an.</p>
+    <label for="aMail">Benutzername</label><input id="aMail" required autocomplete="username">
+    <label for="aPw">Passwort</label>
+    <div class="pw"><input id="aPw" type="password" required minlength="6" autocomplete="current-password"><button type="button" class="link" id="pwZeigen" aria-pressed="false">Zeigen</button></div>
+    <div class="msg" id="authMsg" role="alert"></div>
+    <button class="btn gross" id="authBtn" type="submit">Anmelden</button>
+    <p class="wechsel">Noch kein Mitglied? <button type="button" class="link" id="zuBewerbung">Jetzt bewerben</button> · <button type="button" class="link" id="zuStatus">Status prüfen</button></p>
+   </form>
+   <form id="bewForm" class="login-karte hidden" novalidate>
+    <h2>Bewerbung</h2>
+    <ol class="schritte" id="bwSchritte" aria-label="Fortschritt"><li class="an">Zu dir</li><li>Erfahrung</li><li>Motivation</li></ol>
+    <fieldset data-s="0">
+     <label for="bwName">Name (Charaktername)</label><input id="bwName" required maxlength="80" autocomplete="name">
+     <label for="bwKontakt">Kontakt (E-Mail oder Discord)</label><input id="bwKontakt" required maxlength="100">
+     <label for="bwAlter">Alter</label><input id="bwAlter" type="number" min="10" max="99" required>
+    </fieldset>
+    <fieldset data-s="1" class="hidden">
+     <label for="bwBereich">Wunschbereich</label><select id="bwBereich"><option>Streckendienst</option><option>Verkehrsmanagement</option><option>Egal</option></select>
+     <label for="bwVerf">Wann bist du meist online?</label><select id="bwVerf"><option>Täglich</option><option>Wochentags</option><option>Wochenende</option><option>Flexibel</option></select>
+     <label for="bwErf">Vorerfahrung <small class="zaehl" data-zaehl="bwErf"></small></label><textarea id="bwErf" rows="4" maxlength="1500" placeholder="optional – z. B. andere Server, Dienste, Rollen"></textarea>
+    </fieldset>
+    <fieldset data-s="2" class="hidden">
+     <label for="bwMot">Warum möchtest du zur ÖSAG? <small class="zaehl" data-zaehl="bwMot"></small></label><textarea id="bwMot" rows="5" required minlength="60" maxlength="2000" placeholder="Mindestens 60 Zeichen"></textarea>
+     <label class="haken"><input id="bwRegeln" type="checkbox" required> Ich habe die Serverregeln gelesen und akzeptiere sie.</label>
+    </fieldset>
+    <input id="bwFalle" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
+    <div class="msg" id="bwMsg" role="alert"></div>
+    <div class="bw-knoepfe"><button class="btn sek hidden" id="bwZur" type="button">Zurück</button><button class="btn gross" id="bwWeiter" type="button">Weiter</button><button class="btn gross hidden" id="bwBtn" type="submit">Abschicken</button></div>
+    <p class="wechsel"><button type="button" class="link" id="zuLogin">Zurück zur Anmeldung</button></p>
+   </form>
+   <div id="bewDanke" class="login-karte hidden"><h2>Danke!</h2><p class="sub">Deine Bewerbung ist eingegangen. Mit dieser Nummer kannst du jederzeit den Stand abfragen:</p><div class="bw-code" id="bwCode"></div><button class="btn sek" type="button" id="bwKopie">Nummer kopieren</button><button class="btn gross" type="button" id="bwZurueck">Zur Anmeldung</button></div>
+   <form id="statForm" class="login-karte hidden">
+    <h2>Bewerbungsstatus</h2><p class="sub">Gib deine Bewerbungsnummer ein.</p>
+    <label for="stCode">Bewerbungsnummer</label><input id="stCode" required maxlength="12" autocomplete="off" placeholder="XXXX-XXXX">
+    <div class="msg" id="stMsg" role="alert"></div><div id="stErg"></div>
+    <button class="btn gross" type="submit">Status abfragen</button>
+    <p class="wechsel"><button type="button" class="link" id="zuLogin2">Zurück zur Anmeldung</button></p>
+   </form>
+  </div>
+ </div>
+</section>
+
+<!-- Warten auf Freischaltung -->
+<section id="pending" class="hidden">
+ <div class="karte-login">
+  <div class="warn"></div>
+  <div class="inhalt">
+   <h2>Dein Zugang ist nicht aktiv</h2>
+   <p class="sub">Dein Konto ist gesperrt oder noch nicht freigeschaltet. Wende dich an einen Admin.</p>
+   <button class="btn sek" data-act="logout" type="button">Abmelden</button>
+  </div>
+ </div>
+</section>
+
+<!-- Portal -->
+<div id="app" class="hidden">
+ <aside>
+  <div class="warn"></div>
+  <div class="marke"><svg class="emblem" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#00873C"/><path fill="#fff" d="M10.2 4.5h3.6l4.6 15H5.6z"/><path stroke="#00873C" stroke-width="1.1" stroke-dasharray="2 1.6" fill="none" d="M12 5v14.5"/></svg><div><b>ÖSAG</b><span>Mitgliederportal</span></div></div>
+  <nav id="nav">
+   <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></symbol><symbol id="i-mega" viewBox="0 0 24 24"><path d="M3 11v3h4l8 4V7L7 11H3zM18 9a4 4 0 010 6"/></symbol><symbol id="i-cal" viewBox="0 0 24 24"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"/></symbol><symbol id="i-userx" viewBox="0 0 24 24"><path d="M9 11a4 4 0 100-8 4 4 0 000 8zM2 21c0-4 3-6 7-6s7 2 7 6M17 8l5 5M22 8l-5 5"/></symbol><symbol id="i-flame" viewBox="0 0 24 24"><path d="M9 3L4 21M15 3l5 18M12 4v3m0 4v3m0 4v3"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2zM12 10v5M12 18v.5"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 16v-5M13 16V8M18 16v-3"/></symbol><symbol id="i-award" viewBox="0 0 24 24"><path d="M12 14a6 6 0 100-12 6 6 0 000 12zM8.5 13L7 22l5-3 5 3-1.5-9"/></symbol><symbol id="i-school" viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3zM5 17a3 3 0 013-3h11"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2 1.5a11 11 0 005 5l1.5-2 5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></symbol><symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.5-6 8-6s8 2 8 6"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7"/></symbol><symbol id="i-cog" viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zM12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol></svg>
+   <button data-view="start" class="aktiv"><svg class="ic"><use href="#i-home"/></svg><span>Übersicht</span></button>
+   <div class="ng">Dienst</div>
+   <button data-view="ankuendigungen"><svg class="ic"><use href="#i-mega"/></svg><span>Ankündigungen</span></button>
+   <button data-view="termine"><svg class="ic"><use href="#i-cal"/></svg><span>Termine</span></button>
+   <button data-view="abmeldungen"><svg class="ic"><use href="#i-userx"/></svg><span>Abmeldungen</span></button>
+   <div class="ng">Einsätze</div>
+   <button data-view="berichte"><svg class="ic"><use href="#i-flame"/></svg><span>Einsatzberichte</span></button>
+   <button data-view="arbeitsunfaelle"><svg class="ic"><use href="#i-alert"/></svg><span>Arbeitsunfälle</span></button>
+   <button data-view="statistik"><svg class="ic"><use href="#i-chart"/></svg><span>Statistik</span></button>
+   <div class="ng">Personal</div>
+   <button data-view="befoerderungen"><svg class="ic"><use href="#i-award"/></svg><span>Beförderungen</span></button>
+   <button data-view="lehrgaenge"><svg class="ic"><use href="#i-school"/></svg><span>Lehrgänge</span></button>
+   <button data-view="verwarnungen"><svg class="ic"><use href="#i-shield"/></svg><span>Verwarnungen</span></button>
+   <button data-view="dokumente"><svg class="ic"><use href="#i-book"/></svg><span>Dokumente</span></button>
+   <button data-view="bewerbungen" class="hidden"><svg class="ic"><use href="#i-file"/></svg><span>Bewerbungen</span></button>
+   <button data-view="telefonbuch"><svg class="ic"><use href="#i-phone"/></svg><span>Telefonbuch</span></button>
+   <div class="ng">Konto</div>
+   <button data-view="profil"><svg class="ic"><use href="#i-user"/></svg><span>Mein Profil</span></button>
+   <button data-view="verwaltung" id="navAdmin" class="hidden"><svg class="ic"><use href="#i-cog"/></svg><span>Verwaltung</span></button>
+  </nav>
+  <div class="ich"><div class="ich-kopf"><span class="avatar" id="ichAv"></span><div><b id="ichName"></b><small id="ichRang"></small></div></div>
+   <div class="ich-btns">
+    <button class="btn sek klein" id="themeBtn" type="button"></button>
+    <button class="btn sek klein" data-act="logout" type="button">Abmelden</button></div></div>
+ </aside>
+
+ <main>
+  <div class="uhr-leiste"><span id="uhr"></span></div>
+  <!-- Übersicht -->
+  <section id="v-start">
+   <header class="hero"><h2 id="gruss"></h2><p id="grussSub"></p></header>
+   <div class="led-tafel" role="status" aria-label="Aktuelle Meldungen"><div class="led-text" id="ledText"></div></div>
+   <div class="zahlen" id="zahlen"></div>
+   <h3 style="margin-bottom:.7rem">Ankündigungen</h3>
+   <div id="anStart" style="margin-bottom:1.5rem"></div>
+   <h3 style="margin-bottom:.7rem" id="letzteKopf">Letzte Einsatzberichte</h3>
+   <div id="letzte"></div>
+  </section>
+
+  <!-- Einsatzberichte -->
+  <section id="v-berichte" class="hidden">
+   <header><h2>Einsatzberichte</h2><p>Berichte schreiben und nachlesen.</p></header>
+   <form class="panel" id="bForm">
+    <h3>Neuer Bericht</h3>
+    <div class="zeile2">
+     <div><label for="bTitel">Titel</label><input id="bTitel" required maxlength="100"></div>
+     <div><label for="bArt">Einsatzart</label>
+      <select id="bArt"><option>Pannenhilfe</option><option>Verkehrsunfall</option><option>Fahrbahnhindernis</option><option>Winterdienst</option><option>Baustellenabsicherung</option><option>Sonstiges</option></select></div>
+     <div><label for="bOrt">Einsatzort</label><input id="bOrt" required maxlength="100"></div>
+     <div><label for="bDatum">Einsatzbeginn</label><input id="bDatum" type="datetime-local" required></div>
+     <div><label for="bEnde">Einsatzende</label><input id="bEnde" type="datetime-local" required></div>
+    </div>
+    <label id="bCrewL">Beteiligte Mitglieder (mindestens eines)</label>
+    <div class="crew" id="bCrew" role="group" aria-labelledby="bCrewL"></div>
+    <label for="bText">Ablauf des Einsatzes</label>
+    <textarea id="bText" rows="5" required maxlength="3000"></textarea>
+    <div class="msg" id="bMsg" role="alert"></div>
+    <button class="btn" type="submit">Bericht speichern</button>
+   </form>
+   <div id="bChips" class="chips" role="group" aria-label="Nach Einsatzart filtern"></div>
+   <label for="bSuche" style="margin-top:0">Berichte durchsuchen</label>
+   <input id="bSuche" type="search" placeholder="Titel, Ort, Art, Verfasser oder Beteiligte" style="margin-bottom:1rem">
+   <div id="bListe"></div>
+  </section>
+
+  <!-- Beförderungen -->
+  <section id="v-befoerderungen" class="hidden">
+   <header><h2>Beförderungen</h2><p>Alle Rangänderungen im Überblick.</p></header>
+   <form class="panel hidden" id="pForm">
+    <h3>Mitglied befördern</h3>
+    <div class="zeile2">
+     <div><label for="pUser">Mitglied</label><select id="pUser"></select></div>
+     <div><label for="pRang">Neuer Rang</label><select id="pRang"></select></div>
+    </div>
+    <label for="pGrund">Begründung</label>
+    <input id="pGrund" required maxlength="200" placeholder="z. B. Ausbildung abgeschlossen">
+    <div class="msg" id="pMsg" role="alert"></div>
+    <button class="btn" type="submit">Rang ändern</button>
+   </form>
+   <h3 style="margin-bottom:.6rem">Verlauf</h3>
+   <ul class="log panel" id="pListe"></ul>
+  </section>
+
+  <!-- Arbeitsunfälle -->
+  <section id="v-arbeitsunfaelle" class="hidden">
+   <header><h2>Arbeitsunfälle</h2><p>Unfälle und Verletzungen im Dienst dokumentieren.</p></header>
+   <form class="panel" id="aForm">
+    <h3>Neuer Arbeitsunfall</h3>
+    <div class="zeile2">
+     <div><label for="aPerson">Betroffene Person</label><input id="aPerson" list="aPersonen" required maxlength="60" autocomplete="off"><datalist id="aPersonen"></datalist></div>
+     <div><label for="aDatum">Datum und Uhrzeit</label><input id="aDatum" type="datetime-local" required></div>
+     <div><label for="aOrt">Unfallort</label><input id="aOrt" required maxlength="100"></div>
+     <div><label for="aArt">Art des Unfalls</label>
+      <select id="aArt"><option>Verletzung im Einsatz</option><option>Verletzung bei Übung/Training</option><option>Unfall auf Einsatzfahrt</option><option>Unfall bei Absicherung/Streckenarbeit</option><option>Sonstiges</option></select></div>
+     <div><label for="aVerletzung">Art der Verletzung</label><input id="aVerletzung" required maxlength="100" placeholder="z. B. Prellung am Knie"></div>
+     <div><label for="aSchwere">Schweregrad</label>
+      <select id="aSchwere"><option>Leicht</option><option>Mittel</option><option>Schwer</option></select></div>
+    </div>
+    <label for="aText">Unfallhergang</label>
+    <textarea id="aText" rows="4" required maxlength="3000"></textarea>
+    <label for="aMass">Erstversorgung / Maßnahmen</label>
+    <textarea id="aMass" rows="3" maxlength="1500" placeholder="optional"></textarea>
+    <div class="msg" id="aMsg" role="alert"></div>
+    <button class="btn" type="submit">Unfall speichern</button>
+   </form>
+   <label for="aSuche" style="margin-top:0">Arbeitsunfälle durchsuchen</label>
+   <input id="aSuche" type="search" placeholder="Person, Ort, Art oder Verfasser" style="margin-bottom:1rem">
+   <div id="aListe"></div>
+  </section>
+
+  <!-- Lehrgänge -->
+  <section id="v-lehrgaenge" class="hidden">
+   <header><h2>Lehrgänge</h2><p>Ausbildungen der ÖSAG und wer sie absolviert hat.</p></header>
+   <div id="lAdmin" class="hidden">
+    <form class="panel" id="lForm">
+     <h3>Neuen Lehrgang erstellen</h3>
+     <div class="zeile2">
+      <div><label for="lName">Name</label><input id="lName" required maxlength="80" placeholder="z. B. Streckendienst-Grundausbildung"></div>
+      <div><label for="lBeschr">Kurzbeschreibung</label><input id="lBeschr" maxlength="200" placeholder="optional"></div>
+     </div>
+     <div class="msg" id="lMsg" role="alert"></div>
+     <button class="btn" type="submit">Lehrgang erstellen</button>
+    </form>
+    <form class="panel" id="lvForm">
+     <h3>Lehrgang vergeben</h3>
+     <div class="zeile2">
+      <div><label for="lvUser">Mitglied</label><select id="lvUser"></select></div>
+      <div><label for="lvKurs">Lehrgang</label><select id="lvKurs"></select></div>
+      <div><label for="lvDatum">Abgeschlossen am</label><input id="lvDatum" type="date" required></div>
+      <div><label for="lvNotiz">Vermerk</label><input id="lvNotiz" maxlength="120" placeholder="optional"></div>
+     </div>
+     <div class="msg" id="lvMsg" role="alert"></div>
+     <button class="btn" type="submit">Lehrgang vergeben</button>
+    </form>
+   </div>
+   <h3 style="margin-bottom:.7rem">Alle Lehrgänge</h3>
+   <div id="lListe"></div>
+   <div id="lVerlaufBox" class="hidden">
+    <h3 style="margin:1.5rem 0 .6rem">Vergabe-Verlauf</h3>
+    <ul class="log panel" id="lVerlauf"></ul>
+   </div>
+  </section>
+
+  <!-- Verwarnungen -->
+  <section id="v-verwarnungen" class="hidden">
+   <header><h2>Verwarnungen</h2><p id="wSub"></p></header>
+   <form class="panel hidden" id="wForm">
+    <h3>Verwarnung erteilen</h3>
+    <div class="zeile2">
+     <div><label for="wUser">Mitglied</label><select id="wUser"></select></div>
+     <div><label for="wStufe">Stufe</label>
+      <select id="wStufe"><option>Mündliche Verwarnung</option><option>Schriftliche Verwarnung</option><option>Letzte Verwarnung</option></select></div>
+    </div>
+    <label for="wGrund">Grund</label>
+    <input id="wGrund" required maxlength="200">
+    <label for="wText">Details</label>
+    <textarea id="wText" rows="3" maxlength="1500" placeholder="optional"></textarea>
+    <div class="msg" id="wMsg" role="alert"></div>
+    <button class="btn" type="submit">Verwarnung erteilen</button>
+   </form>
+   <div id="wListe"></div>
+  </section>
+
+  <!-- Ankündigungen -->
+  <section id="v-ankuendigungen" class="hidden">
+   <header><h2>Ankündigungen</h2><p>Neuigkeiten und Mitteilungen der Führung.</p></header>
+   <form class="panel hidden" id="anForm">
+    <h3>Neue Ankündigung</h3>
+    <label for="anTitel">Titel</label><input id="anTitel" required maxlength="100">
+    <label for="anText">Text</label><textarea id="anText" rows="4" required maxlength="2000"></textarea>
+    <label style="display:flex;align-items:center;gap:.45rem;font-weight:500"><input type="checkbox" id="anWichtig" style="width:auto"> Als wichtig markieren</label>
+    <div class="msg" id="anMsg" role="alert"></div>
+    <button class="btn" type="submit">Veröffentlichen</button>
+   </form>
+   <div id="anListe"></div>
+  </section>
+
+  <!-- Termine und Übungen -->
+  <section id="v-termine" class="hidden">
+   <header><h2>Termine und Übungen</h2><p>Dienstabende, Übungen und andere Termine.</p></header>
+   <form class="panel hidden" id="tmForm">
+    <h3>Neuer Termin</h3>
+    <div class="zeile2">
+     <div><label for="tmTitel">Titel</label><input id="tmTitel" required maxlength="100"></div>
+     <div><label for="tmArt">Art</label><select id="tmArt"><option>Übung</option><option>Schulung</option><option>Dienstabend</option><option>Besprechung</option><option>Sonstiges</option></select></div>
+     <div><label for="tmStart">Beginn</label><input id="tmStart" type="datetime-local" required></div>
+     <div><label for="tmOrt">Ort</label><input id="tmOrt" maxlength="100" placeholder="optional"></div>
+    </div>
+    <label for="tmText">Beschreibung</label><textarea id="tmText" rows="3" maxlength="1000" placeholder="optional"></textarea>
+    <div class="msg" id="tmMsg" role="alert"></div>
+    <button class="btn" type="submit">Termin anlegen</button>
+   </form>
+   <h3 style="margin-bottom:.6rem">Anstehend</h3><div id="tmKommend"></div>
+   <h3 style="margin:1.5rem 0 .6rem">Vergangen</h3><div id="tmVorbei"></div>
+  </section>
+
+  <!-- Abmeldungen -->
+  <section id="v-abmeldungen" class="hidden">
+   <header><h2>Abmeldungen</h2><p id="abSub"></p></header>
+   <form class="panel" id="abForm">
+    <h3>Neue Abmeldung</h3>
+    <div class="zeile2">
+     <div><label for="abTermin">Termin</label><select id="abTermin"></select></div><div></div>
+     <div><label for="abVon">Von</label><input id="abVon" type="date" required></div>
+     <div><label for="abBis">Bis</label><input id="abBis" type="date" required></div>
+    </div>
+    <label for="abGrund">Grund</label><input id="abGrund" required maxlength="200">
+    <div class="msg" id="abMsg" role="alert"></div>
+    <button class="btn" type="submit">Abmelden</button>
+   </form>
+   <div id="abListe"></div>
+  </section>
+
+  <!-- Statistik -->
+  <section id="v-statistik" class="hidden">
+   <header><h2>Statistik</h2><p>Einsätze und Mitglieder im Überblick.</p></header>
+   <div class="zahlen" id="stZahlen"></div>
+   <div class="zeile2"><div class="panel"><h3>Einsätze nach Art</h3><div id="stArt"></div></div><div class="panel"><h3>Einsätze pro Monat</h3><div id="stMonat"></div></div></div>
+   <div class="panel"><h3>Meiste Einsatzteilnahmen</h3><div id="stTop"></div></div>
+  </section>
+
+  <!-- Dokumente und Regelwerk -->
+  <section id="v-dokumente" class="hidden">
+   <header><h2>Dokumente und Regelwerk</h2><p>Dienstanweisungen, Funkcodes und Absicherungsrichtlinien zum Nachlesen.</p></header>
+   <form class="panel hidden" id="dkForm">
+    <h3>Neues Dokument</h3>
+    <div class="zeile2">
+     <div><label for="dkTitel">Titel</label><input id="dkTitel" required maxlength="100"></div>
+     <div><label for="dkKat">Kategorie</label><select id="dkKat"><option>Dienstanweisung</option><option>Funkcode</option><option>Absicherungsrichtlinie</option><option>Sonstiges</option></select></div>
+    </div>
+    <label for="dkText">Inhalt</label><textarea id="dkText" rows="8" required maxlength="20000"></textarea>
+    <div class="msg" id="dkMsg" role="alert"></div>
+    <button class="btn" type="submit">Dokument speichern</button>
+   </form>
+   <label for="dkSuche" style="margin-top:0">Dokumente durchsuchen</label>
+   <input id="dkSuche" type="search" placeholder="Titel, Kategorie oder Inhalt" style="margin-bottom:1rem">
+   <div id="dkListe"></div>
+  </section>
+
+  <!-- Bewerbungen -->
+  <section id="v-bewerbungen" class="hidden">
+   <header><h2>Bewerbungen</h2><p>Eingegangene Bewerbungen sichten und bearbeiten.</p></header>
+   <div class="bw-leiste"><input id="bwSuche" type="search" placeholder="Name, Kontakt, Nummer oder Text suchen"><span id="bwStat" class="bw-stat"></span></div>
+   <div id="bwChips" class="chips" role="group" aria-label="Nach Status filtern"></div>
+   <div id="bwListe"></div>
+  </section>
+
+  <!-- Telefonbuch -->
+  <section id="v-telefonbuch" class="hidden">
+   <header><h2>Telefonbuch</h2><p>Erreichbarkeit aller aktiven Mitglieder.</p></header>
+   <form class="panel" id="tForm">
+    <h3>Meine Telefonnummer</h3>
+    <label for="tNr">Telefonnummer</label>
+    <input id="tNr" type="tel" maxlength="30" placeholder="z. B. 555-0142">
+    <div class="msg" id="tMsg" role="alert"></div>
+    <button class="btn" type="submit">Speichern</button>
+   </form>
+   <label for="tSuche" style="margin-top:0">Mitglieder durchsuchen</label>
+   <input id="tSuche" type="search" placeholder="Name, Dienstnummer, Rang oder Nummer" style="margin-bottom:1rem">
+   <div class="tabelle"><table>
+    <thead><tr><th>Name</th><th>Dienstnr.</th><th>Rang</th><th>Telefon</th></tr></thead>
+    <tbody id="tTab"></tbody>
+   </table></div>
+  </section>
+
+  <!-- Mitgliederprofil -->
+  <section id="v-profil" class="hidden">
+   <header><h2 id="pfName"></h2><p id="pfSub"></p></header>
+   <div class="zahlen" id="pfZahlen"></div>
+   <div class="panel"><h3 style="margin-bottom:.4rem">Stammdaten</h3><div id="pfDaten"></div></div>
+   <form class="panel hidden" id="pwForm">
+    <h3>Passwort ändern</h3>
+    <div class="zeile2">
+     <div><label for="pwAlt">Aktuelles Passwort</label><input id="pwAlt" type="password" required autocomplete="current-password"></div>
+     <div></div>
+     <div><label for="pwNeu">Neues Passwort</label><input id="pwNeu" type="password" required minlength="6" autocomplete="new-password"></div>
+     <div><label for="pwNeu2">Neues Passwort wiederholen</label><input id="pwNeu2" type="password" required minlength="6" autocomplete="new-password"></div>
+    </div>
+    <div class="msg" id="pwMsg" role="alert"></div>
+    <button class="btn" type="submit">Passwort ändern</button>
+   </form>
+   <form class="panel hidden" id="apwForm">
+    <h3>Passwort setzen (Admin)</h3>
+    <label for="apwNeu">Neues Passwort für <span id="apwName"></span></label>
+    <input id="apwNeu" type="text" required minlength="6" maxlength="128" autocomplete="off">
+    <div class="msg" id="apwMsg" role="alert"></div>
+    <button class="btn" type="submit">Passwort setzen</button>
+   </form>
+   <div id="pfListen"></div>
+  </section>
+
+  <!-- Verwaltung -->
+  <section id="v-verwaltung" class="hidden">
+   <header><h2>Verwaltung</h2><p>Konten anlegen, sperren, Rollen vergeben sowie Bereiche und Rechte pro Mitglied festlegen.</p></header>
+   <form class="panel" id="nForm">
+    <h3>Neues Mitglied anlegen</h3>
+    <div class="zeile2">
+     <div><label for="nName">Name (IC)</label><input id="nName" required maxlength="60"></div>
+     <div><label for="nDn">Dienstnummer</label><input id="nDn" required maxlength="20" placeholder="z. B. AF-104"></div>
+     <div><label for="nUser">Benutzername</label><input id="nUser" required maxlength="30" pattern="[A-Za-z0-9._\-]+" title="Nur Buchstaben, Zahlen, Punkt, Bindestrich und Unterstrich" autocomplete="off"></div>
+     <div><label for="nPw">Startpasswort</label><input id="nPw" type="text" required minlength="6" autocomplete="off"></div>
+     <div><label for="nRang">Rang</label><select id="nRang"></select></div>
+     <div><label for="nRolle">Rolle</label><select id="nRolle"></select></div>
+    </div>
+    <div class="msg" id="nMsg" role="alert"></div>
+    <button class="btn" type="submit">Konto anlegen</button>
+   </form>
+   <form class="panel" id="rForm">
+    <h3>Neue Rolle hinzufügen</h3>
+    <div class="zeile2">
+     <div><label for="rName">Name der Rolle</label><input id="rName" required maxlength="40" placeholder="z. B. Schichtleiter"></div>
+     <div><label for="rAdmin">Rechte</label><select id="rAdmin"><option value="0">Normale Rechte</option><option value="1">Admin-Rechte</option></select></div>
+     <div><label for="rWarn">Verwarnungen</label><select id="rWarn"><option value="0">Darf nicht verwarnen</option><option value="1">Darf verwarnen</option></select></div>
+    </div>
+    <div class="msg" id="rMsg" role="alert"></div>
+    <button class="btn" type="submit">Rolle hinzufügen</button>
+    <div id="rListe" style="margin-top:1rem"></div>
+   </form>
+   <div class="tabelle"><table>
+    <thead><tr><th>Name</th><th>Dienstnr.</th><th>Rang</th><th>Rolle</th><th>Zugang</th><th>Sichtbare Bereiche</th><th>Rechte</th><th></th></tr></thead>
+    <tbody id="uTab"></tbody>
+   </table></div>
+  </section>
+ </main>
+</div>
+<div id="toast" class="hidden" role="status"></div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,updatePassword,reauthenticateWithCredential,EmailAuthProvider} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,doc,getDoc,setDoc,addDoc,deleteDoc,updateDoc,collection,query,orderBy,limit,where,onSnapshot,writeBatch,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// 1) Trag hier die Werte aus der Firebase-Konsole ein (Projekteinstellungen → Web-App)
+const firebaseConfig = {
+  apiKey: "DEIN_API_KEY",
+  authDomain: "DEIN-PROJEKT.firebaseapp.com",
+  projectId: "DEIN-PROJEKT",
+  storageBucket: "DEIN-PROJEKT.firebasestorage.app",
+  messagingSenderId: "DEINE_SENDER_ID",
+  appId: "DEINE_APP_ID"
+};
+
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const zweitAuth = getAuth(initializeApp(firebaseConfig, "zweit")); // nur zum Anlegen neuer Konten
+
+const RAENGE = ["Probemitarbeiter","Streckendienstmitarbeiter","Straßenwärter","Oberstraßenwärter","Vorarbeiter","Schichtleiter","Stv. Autobahnmeister","Autobahnmeister","Bereichsleiter"];
+
+const $ = s => document.querySelector(s);
+
+/* ---------- Helles / dunkles Design ---------- */
+const sysDunkel = matchMedia("(prefers-color-scheme: dark)");
+const istDunkel = () => { const t = document.documentElement.dataset.theme; return t ? t==="dark" : sysDunkel.matches; };
+const themeBeschriften = () => { $("#themeBtn").textContent = istDunkel() ? "Helles Design" : "Dunkles Design"; };
+$("#themeBtn").onclick = () => {
+  const t = istDunkel() ? "light" : "dark";
+  document.documentElement.dataset.theme = t;
+  try{localStorage.setItem("theme",t)}catch(e){}
+  themeBeschriften();
+};
+sysDunkel.addEventListener("change", () => { if(!document.documentElement.dataset.theme) themeBeschriften(); });
+themeBeschriften();
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = s => s ? new Date(s).toLocaleString("de-AT",{dateStyle:"medium",timeStyle:"short"}) : "";
+const zuMail = n => { n = n.trim(); return n.includes("@") ? n : n.toLowerCase().replace(/\s+/g,"") + "@asfinag.portal"; };
+const dauer = (a,b) => {
+  const min = Math.round((new Date(b) - new Date(a)) / 60000);
+  if(!(min >= 0)) return "";
+  const h = Math.floor(min/60), m = min % 60;
+  return h ? `${h} Std. ${m} Min.` : `${m} Min.`;
+};
+const fmtDatum = s => s ? new Date(s).toLocaleDateString("de-AT",{dateStyle:"medium"}) : "";
+const fmtTs = t => t && t.toDate ? t.toDate().toLocaleDateString("de-AT",{dateStyle:"medium"}) : "gerade eben";
+
+let me = null, reports = [], promos = [], accidents = [], courses = [], awards = [], warnings = [], users = [], rollen = [], ankuend = [], termine = [], abm = [], dokus = [], bewerbungen = [], view = "start", profilId = null;
+const alleRollen = () => [{name:"Mitglied",admin:false,canWarn:false},{name:"Admin",admin:true,canWarn:true},...rollen];
+let userUnsub = null, dataUnsubs = [], dataSig = "";
+
+// Bereiche, die pro Mitglied ein-/ausgeblendet werden können (Übersicht und Verwaltung sind nicht dabei).
+// key = Feldname in users/{uid}.permissions und in firestore.rules, view = data-view der Navigation.
+const BEREICHE = [
+  {key:"reports",    view:"berichte",       label:"Einsatzberichte"},
+  {key:"promotions", view:"befoerderungen", label:"Beförderungen"},
+  {key:"accidents",   view:"arbeitsunfaelle", label:"Arbeitsunfälle"},
+  {key:"courses",     view:"lehrgaenge",      label:"Lehrgänge"}
+];
+
+// Einzelrechte, die ein Admin pro Mitglied vergeben kann (users/{uid}.rights.<key>; "warn" liegt auf users/{uid}.canWarn).
+// def = Standard, solange der Admin nichts eingestellt hat. Admins dürfen immer alles.
+let artFilter = "", bewFilter = "";
+const ART_FARBE = {"Pannenhilfe":"#E8870C","Verkehrsunfall":"#D1242F","Fahrbahnhindernis":"#7B2D8E","Winterdienst":"#2F9BD6","Baustellenabsicherung":"#2F6FDE","Sonstiges":"#6B7280"};
+const RECHTE = [
+  {key:"warn",      label:"Verwarnen",                    def:false},
+  {key:"reports",   label:"Einsatzberichte schreiben",    def:true},
+  {key:"accidents", label:"Arbeitsunfälle eintragen",     def:true},
+  {key:"courses",   label:"Lehrgänge erstellen/vergeben", def:false},
+  {key:"docs",      label:"Dokumente erstellen",          def:false},
+  {key:"announce",  label:"Ankündigungen schreiben",      def:false},
+  {key:"events",    label:"Termine anlegen",              def:false},
+  {key:"applications", label:"Bewerbungen einsehen",     def:false}
+];
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),3200)}
+function zeige(was){["auth","pending","app"].forEach(id=>$("#"+id).classList.toggle("hidden",id!==was))}
+function fehlertext(e){
+  const m={"auth/invalid-credential":"Benutzername oder Passwort stimmt nicht.","auth/email-already-in-use":"Diesen Benutzernamen gibt es schon.","auth/weak-password":"Das Passwort braucht mindestens 6 Zeichen.","auth/invalid-email":"Der Benutzername ist ungültig.","auth/too-many-requests":"Zu viele Versuche. Bitte warte kurz.","permission-denied":"Dafür fehlt dir die Berechtigung."};
+  return m[e.code] || "Das hat nicht geklappt. Bitte versuche es nochmal.";
+}
+
+/* ---------- Anmeldung ---------- */
+$("#authForm").onsubmit = async e => {
+  e.preventDefault(); $("#authMsg").textContent = "";
+  const btn = $("#authBtn"); btn.disabled = true; btn.textContent = "Anmelden …";
+  try{ await signInWithEmailAndPassword(auth,zuMail($("#aMail").value),$("#aPw").value) }
+  catch(err){$("#authMsg").textContent = fehlertext(err)}
+  finally{btn.disabled = false; btn.textContent = "Anmelden"}
+};
+$("#pwZeigen").onclick = () => {
+  const i = $("#aPw"), zeigen = i.type === "password";
+  i.type = zeigen ? "text" : "password"; $("#pwZeigen").textContent = zeigen ? "Verbergen" : "Zeigen"; $("#pwZeigen").setAttribute("aria-pressed", zeigen);
+};
+
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"); if(!b) return;
+  const act = b.dataset.act, id = b.dataset.id;
+  try{
+    if(act==="logout") await signOut(auth);
+    if(act==="profil"){profilId=id;view="profil";renderAll();window.scrollTo(0,0)}
+    if(act==="kurs-loeschen" && confirm("Lehrgang entfernen? Bereits vergebene Lehrgänge bleiben in den Profilen stehen.")){await deleteDoc(doc(db,"courses",id)); toast("Lehrgang entfernt")}
+    if(act==="vergabe-loeschen" && confirm("Diesen Lehrgang dem Mitglied wieder entziehen?")){await deleteDoc(doc(db,"courseAwards",id)); toast("Lehrgang entzogen")}
+    if(act==="verwarnung-loeschen" && confirm("Diese Verwarnung endgültig löschen?")){await deleteDoc(doc(db,"warnings",id)); toast("Verwarnung gelöscht")}
+    if(act==="rolle-warn"){
+      const r = rollen.find(x => x.id===id); if(!r) return;
+      const neu = !r.canWarn, batch = writeBatch(db);
+      batch.update(doc(db,"roles",id),{canWarn:neu});
+      users.filter(u => u.funktion===r.name).forEach(u => batch.update(doc(db,"users",u.id),{canWarn:neu}));
+      await batch.commit(); toast(neu?"Rolle darf jetzt verwarnen":"Rolle darf nicht mehr verwarnen");
+    }
+    if(act==="zugang"){const u=users.find(x=>x.id===id); await updateDoc(doc(db,"users",id),{active:!u.active}); toast(u.active?"Zugang gesperrt":"Zugang freigeschaltet")}
+    if(act==="rolle"){const u=users.find(x=>x.id===id); await updateDoc(doc(db,"users",id),{role:u.role==="admin"?"member":"admin"}); toast("Rolle geändert")}
+    if(act==="mitglied-loeschen" && confirm("Dieses Konto löschen? Die Person kann sich danach nicht mehr einloggen.")){await deleteDoc(doc(db,"users",id)); toast("Konto gelöscht")}
+    if(act==="rolle-loeschen" && confirm("Rolle entfernen? Bereits vergebene Rollen bleiben bei den Mitgliedern stehen.")){await deleteDoc(doc(db,"roles",id)); toast("Rolle entfernt")}
+    if(act==="unfall-loeschen" && confirm("Diesen Arbeitsunfall endgültig löschen?")){await deleteDoc(doc(db,"accidents",id)); toast("Arbeitsunfall gelöscht")}
+    const DEL = {"an-loeschen":["announcements","Ankündigung"],"tm-loeschen":["events","Termin"],"ab-loeschen":["absences","Abmeldung"],"dk-loeschen":["docs","Dokument"],"bew-loeschen":["applications","Bewerbung"]};
+    if(DEL[act] && confirm(`${DEL[act][1]} endgültig löschen?`)){await deleteDoc(doc(db,DEL[act][0],id)); toast(DEL[act][1]+" gelöscht")}
+    if(act==="loeschen" && confirm("Diesen Bericht endgültig löschen?")){await deleteDoc(doc(db,"reports",id)); toast("Bericht gelöscht")}
+  }catch(err){toast(fehlertext(err))}
+});
+
+document.addEventListener("change", async e => {
+  const sel = e.target.closest(".rolle-sel"); if(!sel) return;
+  const r = alleRollen().find(x => x.name === sel.value); if(!r) return;
+  try{await updateDoc(doc(db,"users",sel.dataset.uid),{funktion:r.name,role:r.admin?"admin":"member",canWarn:!!(r.admin||r.canWarn)}); toast("Rolle geändert")}
+  catch(err){toast(fehlertext(err))}
+});
+document.addEventListener("change", async e => {
+  const cb = e.target.closest(".perm-cb"); if(!cb) return;
+  try{await updateDoc(doc(db,"users",cb.dataset.uid),{["permissions."+cb.dataset.key]:cb.checked}); toast("Bereiche gespeichert")}
+  catch(err){cb.checked=!cb.checked; toast(fehlertext(err))}
+});
+document.addEventListener("change", async e => {
+  const cb = e.target.closest(".recht-cb"); if(!cb) return;
+  try{await updateDoc(doc(db,"users",cb.dataset.uid), cb.dataset.key==="warn" ? {canWarn:cb.checked} : {["rights."+cb.dataset.key]:cb.checked}); toast("Rechte gespeichert")}
+  catch(err){cb.checked=!cb.checked; toast(fehlertext(err))}
+});
+$("#rForm").onsubmit = async e => {
+  e.preventDefault(); $("#rMsg").textContent = "";
+  const name = $("#rName").value.trim();
+  if(alleRollen().some(r => r.name.toLowerCase() === name.toLowerCase())){$("#rMsg").textContent = "Diese Rolle gibt es schon.";return}
+  try{await addDoc(collection(db,"roles"),{name,admin:$("#rAdmin").value==="1",canWarn:$("#rWarn").value==="1"}); e.target.reset(); toast("Rolle hinzugefügt")}
+  catch(err){$("#rMsg").textContent = fehlertext(err)}
+};
+
+/* ---------- Sitzung & Daten ---------- */
+onAuthStateChanged(auth, user => {
+  userUnsub && userUnsub(); userUnsub = null; stopData(); me = null;
+  if(!user){zeige("auth");return}
+  userUnsub = onSnapshot(doc(db,"users",user.uid), s => {
+    me = s.exists() ? {id:s.id,...s.data()} : null;
+    if(!me || !me.active){stopData();zeige("pending");return}
+    zeige("app"); startData(); renderAll();
+  }, err => toast(fehlertext(err)));
+});
+
+function startData(){
+  // Nur Daten abonnieren, die das Mitglied sehen darf; bei geänderten Rechten neu starten.
+  const sig = BEREICHE.map(b => darf(b.key)).join() + "|" + darfVerwarnen() + "|" + istAdmin() + "|" + kann("applications");
+  if(dataUnsubs.length && sig === dataSig) return;
+  stopData(); dataSig = sig;
+  const f = err => toast(fehlertext(err));
+  dataUnsubs.push(
+    onSnapshot(query(collection(db,"users"),orderBy("name")), s => {users=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f),
+    onSnapshot(query(collection(db,"roles"),orderBy("name")), s => {rollen=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f)
+  );
+  if(darf("reports")) dataUnsubs.push(onSnapshot(query(collection(db,"reports"),orderBy("date","desc"),limit(100)), s => {reports=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f));
+  if(darf("courses")) dataUnsubs.push(
+    onSnapshot(query(collection(db,"courses"),orderBy("name")), s => {courses=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f),
+    onSnapshot(query(collection(db,"courseAwards"),orderBy("createdAt","desc"),limit(500)), s => {awards=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f)
+  );
+  // Verwarnungen: wer verwarnen darf, sieht alle; alle anderen nur die eigenen.
+  const wq = darfVerwarnen() ? query(collection(db,"warnings"),orderBy("createdAt","desc"),limit(200)) : query(collection(db,"warnings"),where("userUid","==",me.id));
+  dataUnsubs.push(onSnapshot(wq, s => {
+    warnings = s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b) => (b.createdAt?.toMillis?.() ?? Date.now()) - (a.createdAt?.toMillis?.() ?? Date.now()));
+    renderAll();
+  }, f));
+  if(darf("accidents")) dataUnsubs.push(onSnapshot(query(collection(db,"accidents"),orderBy("date","desc"),limit(100)), s => {accidents=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f));
+  const lade = (q,set) => dataUnsubs.push(onSnapshot(q, s => {set(s.docs.map(d=>({id:d.id,...d.data()})));renderAll()}, f));
+  lade(query(collection(db,"announcements"),orderBy("createdAt","desc"),limit(50)), v => ankuend=v);
+  lade(query(collection(db,"events"),orderBy("start","desc"),limit(200)), v => termine=v);
+  if(kann("applications")) lade(query(collection(db,"applications"),orderBy("createdAt","desc"),limit(200)), v => bewerbungen=v);
+  lade(query(collection(db,"docs"),orderBy("title")), v => dokus=v);
+  lade(istAdmin() ? query(collection(db,"absences"),orderBy("createdAt","desc"),limit(300)) : query(collection(db,"absences"),where("userUid","==",me.id)), v => abm=v.sort((a,b)=>(b.from||"").localeCompare(a.from||"")));
+  if(darf("promotions")) dataUnsubs.push(onSnapshot(query(collection(db,"promotions"),orderBy("createdAt","desc"),limit(100)), s => {promos=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()}, f));
+}
+function stopData(){dataUnsubs.forEach(u=>u());dataUnsubs=[];dataSig="";reports=[];promos=[];accidents=[];courses=[];awards=[];warnings=[];users=[];rollen=[];ankuend=[];termine=[];abm=[];dokus=[];bewerbungen=[]}
+const istAdmin = () => me && me.role === "admin";
+// Admins sehen alles. Sonst zählt permissions[key]; fehlt der Eintrag, ist der Bereich erlaubt.
+const darf = key => !!me && (me.role === "admin" || !me.permissions || me.permissions[key] !== false);
+// Verwarnen dürfen Admins und alle, deren Rolle "darf verwarnen" hat (wird beim Zuweisen der Rolle auf users/{uid}.canWarn kopiert).
+const darfVerwarnen = () => !!me && (me.role === "admin" || me.canWarn === true);
+const hatRecht = (u,key) => key==="warn" ? (u.role==="admin" || u.canWarn===true) : (u.role==="admin" || (u.rights && key in u.rights ? u.rights[key]===true : RECHTE.find(r => r.key===key).def));
+const kann = key => !!me && hatRecht(me,key);
+
+/* ---------- Navigation ---------- */
+$("#nav").onclick = e => {
+  const b = e.target.closest("[data-view]"); if(!b) return;
+  view = b.dataset.view; if(view==="profil") profilId = me.id; renderAll();
+};
+
+/* ---------- Anzeige ---------- */
+function berichtKarte(r){
+  return `<article class="bericht" style="--ac:${ART_FARBE[r.type]||"#6B7280"}"><div class="kopf"><h3>${r.number?`<span class="tag nr">${esc(r.number)}</span> `:""}${esc(r.title)}</h3>
+    ${istAdmin()?`<button class="btn gefahr klein" data-act="loeschen" data-id="${r.id}" type="button">Löschen</button>`:""}</div>
+    <div class="meta"><span class="tag art">${esc(r.type)}</span>${esc(r.location)} · ${fmt(r.date)}${r.endDate?` bis ${fmt(r.endDate)} (${dauer(r.date,r.endDate)})`:""} · ${esc(r.authorName)}</div>
+    <p>${esc(r.narrative)}</p>${r.crew&&r.crew.length?`<p style="margin-top:.5rem"><b>Beteiligt:</b> ${r.crew.map(c => esc(c.name)).join(", ")}</p>`:""}</article>`;
+}
+
+function verwarnKarte(w){
+  const name = istAdmin()||darfVerwarnen() ? `<button class="namelink" data-act="profil" data-id="${w.userUid}" type="button">${esc(w.userName)}</button>` : esc(w.userName);
+  return `<article class="bericht"><div class="kopf"><h3>${name}</h3>
+    ${istAdmin()?`<button class="btn gefahr klein" data-act="verwarnung-loeschen" data-id="${w.id}" type="button">Löschen</button>`:""}</div>
+    <div class="meta"><span class="tag${w.level==="Letzte Verwarnung"?" schwer":""}">${esc(w.level)}</span>durch ${esc(w.byName)} · ${fmtTs(w.createdAt)}</div>
+    <p><b>Grund:</b> ${esc(w.reason)}</p>${w.details?`<p>${esc(w.details)}</p>`:""}</article>`;
+}
+
+function unfallKarte(a){
+  return `<article class="bericht"><div class="kopf"><h3>${esc(a.person)}</h3>
+    ${istAdmin()?`<button class="btn gefahr klein" data-act="unfall-loeschen" data-id="${a.id}" type="button">Löschen</button>`:""}</div>
+    <div class="meta"><span class="tag">${esc(a.type)}</span><span class="tag ${esc((a.severity||"").toLowerCase())}"><span class="led ${a.severity==="Schwer"?"rot":a.severity==="Mittel"?"gelb":"gruen"}"></span>${esc(a.severity)}</span>${esc(a.location)} · ${fmt(a.date)} · ${esc(a.authorName)}</div>
+    <p><b>Verletzung:</b> ${esc(a.injury)}</p>
+    <p><b>Hergang:</b> ${esc(a.narrative)}</p>
+    ${a.measures?`<p><b>Maßnahmen:</b> ${esc(a.measures)}</p>`:""}</article>`;
+}
+
+function renderAll(){
+  if(!me || !me.active) return;
+  $("#ichName").textContent = me.name; $("#ichAv").textContent = me.name.split(/\s+/).filter(Boolean).slice(0,2).map(x => x[0].toUpperCase()).join("");
+  $("#ichRang").textContent = `${me.rank} · ${me.dienstnummer}`;
+  $("#navAdmin").classList.toggle("hidden",!istAdmin());
+  BEREICHE.forEach(b => document.querySelector(`#nav [data-view="${b.view}"]`).classList.toggle("hidden",!darf(b.key)));
+  if(view==="verwaltung" && !istAdmin()) view = "start";
+  const sperre = BEREICHE.find(b => b.view===view && !darf(b.key));
+  if(sperre) view = "start";
+  if(view==="statistik" && !darf("reports")) view = "start";
+  if(view==="bewerbungen" && !kann("applications")) view = "start";
+  document.querySelector('#nav [data-view="statistik"]').classList.toggle("hidden",!darf("reports"));
+  if(view==="profil" && !(users.find(u => u.id===profilId) || (profilId===me.id ? me : null))) view = "start";
+  document.querySelectorAll("#nav [data-view]").forEach(b => b.classList.toggle("aktiv",b.dataset.view===view && (view!=="profil" || profilId===me.id)));
+  ["start","bewerbungen","ankuendigungen","termine","abmeldungen","statistik","dokumente","berichte","befoerderungen","arbeitsunfaelle","lehrgaenge","verwarnungen","telefonbuch","profil","verwaltung"].forEach(v => $("#v-"+v).classList.toggle("hidden",v!==view));
+
+  // Übersicht
+  const monat = new Date().toISOString().slice(0,7);
+  const zahlen = [];
+  if(darf("reports")) zahlen.push([reports.length,"Einsatzberichte"],[reports.filter(r => (r.date||"").startsWith(monat)).length,"Einsätze in diesem Monat"]);
+  zahlen.push([users.filter(u => u.active).length,"Aktive Mitglieder"]);
+  if(istAdmin()) zahlen.push([users.filter(u => !u.active).length,"Offene Freischaltungen"]);
+  $("#zahlen").innerHTML = zahlen.map(z => `<div class="zahl"><b>${z[0]}</b><span>${z[1]}</span></div>`).join("");
+  $("#letzteKopf").classList.toggle("hidden",!darf("reports"));
+  $("#letzte").classList.toggle("hidden",!darf("reports"));
+  $("#letzte").innerHTML = reports.slice(0,3).map(berichtKarte).join("") || `<div class="leer">Noch keine Einsatzberichte. Schreib den ersten unter „Einsatzberichte“.</div>`;
+
+  // Berichte
+  const crewBox = $("#bCrew"), aktive = users.filter(u => u.active), sigC = aktive.map(u => u.id+"|"+u.name).join();
+  if(crewBox.dataset.sig !== sigC){
+    const gewaehlt = new Set([...crewBox.querySelectorAll("input:checked")].map(i => i.value));
+    crewBox.dataset.sig = sigC;
+    crewBox.innerHTML = aktive.map(u => `<label><input type="checkbox" value="${u.id}"><span>${esc(u.name)}${u.dienstnummer?` (${esc(u.dienstnummer)})`:""}</span></label>`).join("") || "<small>Keine aktiven Mitglieder.</small>";
+    crewBox.querySelectorAll("input").forEach(i => i.checked = gewaehlt.has(i.value));
+  }
+  const q = $("#bSuche").value.trim().toLowerCase();
+  const treffer = reports.filter(r => !artFilter || r.type===artFilter).filter(r => !q || [r.number,r.title,r.location,r.type,r.authorName,...(r.crew||[]).map(c => c.name)].join(" ").toLowerCase().includes(q));
+  $("#bListe").innerHTML = treffer.map(berichtKarte).join("") || `<div class="leer">${q?"Kein Bericht passt zu deiner Suche.":"Noch keine Einsatzberichte."}</div>`;
+
+  // Arbeitsunfälle
+  $("#aPersonen").innerHTML = users.map(u => `<option value="${esc(u.name)}">`).join("");
+  const qa = $("#aSuche").value.trim().toLowerCase();
+  const aTreffer = accidents.filter(a => !qa || [a.person,a.location,a.type,a.injury,a.authorName].join(" ").toLowerCase().includes(qa));
+  $("#aListe").innerHTML = aTreffer.map(unfallKarte).join("") || `<div class="leer">${qa?"Kein Arbeitsunfall passt zu deiner Suche.":"Noch keine Arbeitsunfälle eingetragen."}</div>`;
+
+  // Lehrgänge
+  $("#lAdmin").classList.toggle("hidden",!kann("courses"));
+  $("#lVerlaufBox").classList.toggle("hidden",!kann("courses"));
+  if(kann("courses")){
+    const su = $("#lvUser"), sk = $("#lvKurs"), au = su.value, ak = sk.value;
+    su.innerHTML = users.filter(u => u.active).map(u => `<option value="${u.id}">${esc(u.name)} (${esc(u.rank)})</option>`).join("");
+    sk.innerHTML = courses.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+    if(au) su.value = au;
+    if(ak) sk.value = ak;
+    if(!$("#lvDatum").value) $("#lvDatum").value = new Date().toISOString().slice(0,10);
+    $("#lVerlauf").innerHTML = awards.map(a => `<li><b>${esc(a.userName)}</b>: ${esc(a.courseName)} · ${fmtDatum(a.date)}${a.note?` · ${esc(a.note)}`:""}<br><small>vergeben von ${esc(a.byName)} · ${fmtTs(a.createdAt)}</small> ${istAdmin()?`<button class="btn gefahr klein" data-act="vergabe-loeschen" data-id="${a.id}" type="button">Entziehen</button>`:""}</li>`).join("") || `<li class="leer">Noch keine Lehrgänge vergeben.</li>`;
+  }
+  $("#lListe").innerHTML = courses.map(c => {
+    const h = awards.filter(a => a.courseId===c.id);
+    return `<article class="bericht"><div class="kopf"><h3>${esc(c.name)}</h3>${istAdmin()?`<button class="btn gefahr klein" data-act="kurs-loeschen" data-id="${c.id}" type="button">Löschen</button>`:""}</div>
+      ${c.description?`<div class="meta">${esc(c.description)}</div>`:""}
+      <p>${h.length?h.map(a => `<span class="tag">${esc(a.userName)}</span>`).join(""):"<small>Noch von niemandem absolviert.</small>"}</p></article>`;
+  }).join("") || `<div class="leer">Noch keine Lehrgänge angelegt.</div>`;
+
+  // Verwarnungen
+  $("#wForm").classList.toggle("hidden",!darfVerwarnen());
+  $("#wSub").textContent = darfVerwarnen() ? "Verwarnungen erteilen und einsehen." : "Deine eigenen Verwarnungen.";
+  if(darfVerwarnen()){
+    const sw = $("#wUser"), aw = sw.value;
+    sw.innerHTML = users.filter(u => u.active && u.id!==me.id).map(u => `<option value="${u.id}">${esc(u.name)} (${esc(u.rank)})</option>`).join("");
+    if(aw) sw.value = aw;
+  }
+  $("#wListe").innerHTML = warnings.map(verwarnKarte).join("") || `<div class="leer">${darfVerwarnen()?"Noch keine Verwarnungen erteilt.":"Du hast keine Verwarnungen."}</div>`;
+
+  // Telefonbuch
+  if(document.activeElement !== $("#tNr")) $("#tNr").value = me.phone || "";
+  const qt = $("#tSuche").value.trim().toLowerCase();
+  const tl = users.filter(u => u.active && (!qt || [u.name,u.dienstnummer,u.rank,u.phone].join(" ").toLowerCase().includes(qt)));
+  $("#tTab").innerHTML = tl.map(u => `<tr><td><button class="namelink" data-act="profil" data-id="${u.id}" type="button">${esc(u.name)}</button></td><td>${esc(u.dienstnummer)}</td><td>${esc(u.rank)}</td><td>${u.phone?esc(u.phone):"<small>nicht eingetragen</small>"}</td></tr>`).join("") || `<tr><td colspan="4" class="leer">Keine Treffer.</td></tr>`;
+
+  // Mitgliederprofil
+  if(view==="profil"){
+    const u = users.find(x => x.id===profilId) || me, eigen = u.id===me.id;
+    const uw = warnings.filter(w => w.userUid===u.id), wSichtbar = eigen || darfVerwarnen();
+    $("#pfName").textContent = u.name;
+    $("#pfSub").textContent = `${u.rank||""} · ${u.dienstnummer||""}`;
+    const z = [];
+    if(darf("reports")) z.push([reports.filter(r => r.authorUid===u.id).length,"Berichte verfasst"],[reports.filter(r => (r.crew||[]).some(c => c.uid===u.id)).length,"Einsatzteilnahmen"]);
+    if(darf("courses")) z.push([awards.filter(a => a.userUid===u.id).length,"Lehrgänge"]);
+    if(wSichtbar) z.push([uw.length,"Verwarnungen"]);
+    $("#pfZahlen").innerHTML = z.map(x => `<div class="zahl"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
+    const daten = [["Rolle",u.funktion || (u.role==="admin"?"Admin":"Mitglied")],["Telefon",u.phone || "nicht eingetragen"],["Im Portal seit",u.createdAt?fmtTs(u.createdAt):"–"]];
+    if(istAdmin()) daten.push(["Zugang",u.active?"Aktiv":"Gesperrt"]);
+    $("#pfDaten").innerHTML = `<ul class="log">${daten.map(d => `<li><b>${d[0]}:</b> ${esc(d[1])}</li>`).join("")}</ul>`;
+    let l = "";
+    if(darf("courses")){
+      const aw = awards.filter(a => a.userUid===u.id);
+      l += `<h3 style="margin-bottom:.6rem">Lehrgänge</h3><ul class="log panel">${aw.map(a => `<li><b>${esc(a.courseName)}</b> · ${fmtDatum(a.date)}${a.note?` · ${esc(a.note)}`:""}</li>`).join("") || `<li class="leer">Noch keine Lehrgänge.</li>`}</ul>`;
+    }
+    if(darf("promotions")){
+      const pr = promos.filter(p => p.userUid===u.id);
+      l += `<h3 style="margin-bottom:.6rem">Beförderungen</h3><ul class="log panel">${pr.map(p => `<li>${esc(p.from)} → <b>${esc(p.to)}</b><br><small>${esc(p.reason)} · durch ${esc(p.byName)} · ${fmtTs(p.createdAt)}</small></li>`).join("") || `<li class="leer">Noch keine Beförderungen.</li>`}</ul>`;
+    }
+    if(wSichtbar) l += `<h3 style="margin-bottom:.6rem">Verwarnungen</h3>${uw.map(verwarnKarte).join("") || `<div class="leer">Keine Verwarnungen.</div>`}`;
+    $("#pfListen").innerHTML = l;
+    $("#pwForm").classList.toggle("hidden",!eigen);
+    $("#apwForm").classList.toggle("hidden",!(istAdmin() && !eigen));
+    $("#apwName").textContent = u.name;
+  }
+
+  // Beförderungen
+  $("#pForm").classList.toggle("hidden",!istAdmin());
+  if(istAdmin()){
+    const sel = $("#pUser"), alt = sel.value;
+    sel.innerHTML = users.filter(u => u.active).map(u => `<option value="${u.id}">${esc(u.name)} (${esc(u.rank)})</option>`).join("");
+    if(alt) sel.value = alt;
+    if(!$("#pRang").options.length) $("#pRang").innerHTML = RAENGE.map(r => `<option>${r}</option>`).join("");
+    if(!$("#nRang").options.length) $("#nRang").innerHTML = RAENGE.map(r => `<option>${r}</option>`).join("");
+  }
+  $("#pListe").innerHTML = promos.map(p => `<li><b>${esc(p.userName)}</b>: ${esc(p.from)} → <b>${esc(p.to)}</b><br><small>${esc(p.reason)} · durch ${esc(p.byName)} · ${fmtTs(p.createdAt)}</small></li>`).join("") || `<li class="leer">Noch keine Beförderungen eingetragen.</li>`;
+
+  // Verwaltung
+  if(istAdmin()){
+    const nr = $("#nRolle"), alt2 = nr.value;
+    nr.innerHTML = alleRollen().map(r => `<option>${esc(r.name)}</option>`).join("");
+    if(alt2) nr.value = alt2;
+    $("#rListe").innerHTML = rollen.map(r => `<span class="tag">${esc(r.name)}${r.admin?" · Admin":""}${r.canWarn?" · darf verwarnen":""}</span><button class="btn sek klein" data-act="rolle-warn" data-id="${r.id}" type="button">${r.canWarn?"Verwarnen entziehen":"Verwarnen erlauben"}</button> <button class="btn gefahr klein" data-act="rolle-loeschen" data-id="${r.id}" type="button" aria-label="Rolle ${esc(r.name)} entfernen">Entfernen</button><br>`).join("") || "<small>Noch keine eigenen Rollen. Mitglied und Admin gibt es immer.</small>";
+    $("#uTab").innerHTML = users.map(u => {
+      const ich = u.id === me.id, cur = u.funktion || (u.role==="admin"?"Admin":"Mitglied");
+      const opts = alleRollen().map(r => `<option${r.name===cur?" selected":""}>${esc(r.name)}</option>`).join("");
+      return `<tr><td><button class="namelink" data-act="profil" data-id="${u.id}" type="button">${esc(u.name)}</button>${u.username?`<br><small>${esc(u.username)}</small>`:""}</td><td>${esc(u.dienstnummer)}</td><td>${esc(u.rank)}</td>
+        <td>${ich?esc(cur):`<select class="rolle-sel" data-uid="${u.id}" aria-label="Rolle von ${esc(u.name)}">${opts}</select>`}</td>
+        <td><span class="status ${u.active?"an":"aus"}"><span class="led ${u.active?"gruen":"rot"}"></span>${u.active?"Aktiv":"Gesperrt"}</span></td>
+        <td><div class="perm">${BEREICHE.map(b => { const admin = u.role==="admin", an = admin || !u.permissions || u.permissions[b.key] !== false;
+          return `<label><input type="checkbox" class="perm-cb" data-uid="${u.id}" data-key="${b.key}"${an?" checked":""}${admin?" disabled":""}><span>${esc(b.label)}</span></label>`; }).join("")}${u.role==="admin"?"<small>Admins sehen alles.</small>":""}</div></td>
+        <td><div class="perm">${RECHTE.map(r => `<label><input type="checkbox" class="recht-cb" data-uid="${u.id}" data-key="${r.key}"${hatRecht(u,r.key)?" checked":""}${u.role==="admin"?" disabled":""}><span>${esc(r.label)}</span></label>`).join("")}</div></td>
+        <td>${ich?"":`<button class="btn sek klein" data-act="zugang" data-id="${u.id}" type="button">${u.active?"Sperren":"Freischalten"}</button>
+        <button class="btn gefahr klein" data-act="mitglied-loeschen" data-id="${u.id}" type="button">Löschen</button>`}</td></tr>`;
+    }).join("");
+  }
+  renderNeu();
+}
+
+const BEW_ST = {neu:["Neu","rot","#D1242F"],pruefung:["In Prüfung","gelb","#C27C0E"],gespraech:["Gespräch","gelb","#2563EB"],angenommen:["Angenommen","gruen","#1E7B4A"],abgelehnt:["Abgelehnt","aus","#6B7280"]};
+const BEW_PUB = {neu:"Eingegangen",pruefung:"In Prüfung",gespraech:"Gespräch geplant",angenommen:"Angenommen",abgelehnt:"Abgelehnt"};
+const msTs = t => t?.toMillis ? t.toMillis() : t?.seconds ? t.seconds*1000 : t ? new Date(t).getTime() : 0;
+const tage = t => Math.floor((Date.now() - msTs(t)) / 864e5);
+const vor = t => { const d = tage(t); return d<=0 ? "heute" : d===1 ? "gestern" : `vor ${d} Tagen`; };
+function renderBew(){
+  const keys = Object.keys(BEW_ST), zaehl = k => bewerbungen.filter(b => b.status===k).length, q = ($("#bwSuche").value || "").trim().toLowerCase();
+  const alt = bewerbungen.filter(b => b.status==="neu" && tage(b.createdAt) >= 3).length, offen = zaehl("neu") + zaehl("pruefung") + zaehl("gespraech");
+  $("#bwStat").innerHTML = `${offen} offen${alt ? ` · <b>${alt} warten seit 3+ Tagen</b>` : ""}`;
+  $("#bwChips").innerHTML = ["", ...keys].map(k => `<button type="button" class="chip${bewFilter===k?" an":""}" data-bst="${k}" style="--ac:${k?BEW_ST[k][2]:"var(--tag)"}"><i></i>${k?BEW_ST[k][0]:"Alle"} (${k?zaehl(k):bewerbungen.length})</button>`).join("");
+  const liste = bewerbungen.filter(b => (!bewFilter || b.status===bewFilter) && (!q || [b.name,b.contact,b.code,b.motivation,b.experience].join(" ").toLowerCase().includes(q)))
+    .sort((x,y) => keys.indexOf(x.status) - keys.indexOf(y.status) || msTs(y.createdAt) - msTs(x.createdAt));
+  $("#bwListe").innerHTML = liste.map(b => { const st = BEW_ST[b.status] || BEW_ST.neu, wartet = b.status==="neu" && tage(b.createdAt) >= 3;
+    return `<article class="bericht bew" style="--ac:${st[2]}"><div class="kopf"><h3>${esc(b.name)}</h3><div>${b.code?`<span class="code">${esc(b.code.slice(0,4))}-${esc(b.code.slice(4))}</span> `:""}${istAdmin()?`<button class="btn gefahr klein" data-act="bew-loeschen" data-id="${b.id}" type="button">Löschen</button>`:""}</div></div>
+    <div class="meta"><i class="pkt" style="background:${st[2]}"></i>${st[0]} · ${esc(b.contact)} · ${esc(b.age)} Jahre · ${fmtTs(b.createdAt)} (<span class="${wartet?"alt":""}">${vor(b.createdAt)}</span>)</div>
+    ${b.bereich || b.verfuegbar ? `<div class="fakten">${b.bereich?`<span>${esc(b.bereich)}</span>`:""}${b.verfuegbar?`<span>online: ${esc(b.verfuegbar)}</span>`:""}</div>` : ""}
+    <p><b>Vorerfahrung</b><br>${esc(b.experience || "–")}</p><p><b>Motivation</b><br>${esc(b.motivation)}</p>
+    <div class="bw-akt">${keys.filter(k => k!==b.status).map(k => `<button type="button" class="chip" data-bset="${k}" data-id="${b.id}" style="--ac:${BEW_ST[k][2]}"><i></i>${BEW_ST[k][0]}</button>`).join("")}</div>
+    <label>Interne Notiz</label><input class="bew-note" data-id="${b.id}" value="${esc(b.note || "")}" maxlength="300">
+    <label>Rückmeldung an die Bewerber:in (im Statuscheck sichtbar)</label><input class="bew-reply" data-id="${b.id}" value="${esc(b.reply || "")}" maxlength="300">
+    ${b.reviewedBy ? `<small>Zuletzt bearbeitet von ${esc(b.reviewedBy)}</small>` : ""}</article>`; }).join("") || `<div class="leer">Keine Bewerbungen.</div>`;
+}
+async function bewSpeichern(id, f){
+  const b = bewerbungen.find(x => x.id===id); if(!b) return;
+  const w = writeBatch(db);
+  w.update(doc(db,"applications",id), {...f, reviewedBy:me.name, reviewedAt:serverTimestamp()});
+  w.set(doc(db,"applicationStatus",id), {status:f.status ?? b.status, reply:f.reply ?? b.reply ?? "", updatedAt:serverTimestamp()}, {merge:true});
+  try{ await w.commit(); toast("Gespeichert"); }catch(err){ toast(fehlertext(err)); }
+}
+
+function renderNeu(){
+  const std = new Date().getHours();
+  $("#gruss").textContent = `${std < 11 ? "Guten Morgen" : std < 18 ? "Guten Tag" : "Guten Abend"}, ${me.name.split(" ")[0]}`;
+  $("#grussSub").textContent = [me.rank, me.dienstnummer].filter(Boolean).join(" · ");
+  $("#bChips").innerHTML = ["", ...Object.keys(ART_FARBE)].map(k => `<button type="button" class="chip${artFilter===k?" an":""}" data-art="${k}" style="--ac:${k?ART_FARBE[k]:"var(--tag)"}"><i></i>${k||"Alle"}</button>`).join("");
+  const adm = istAdmin(), jetzt = new Date().toISOString().slice(0,16);
+  const bn = document.querySelector('#nav [data-view="bewerbungen"]');
+  bn.classList.toggle("hidden", !kann("applications")); bn.classList.toggle("neu", kann("applications") && bewerbungen.some(b => b.status==="neu"));
+  if(view==="bewerbungen") renderBew();
+  const loeschen = (act,id) => adm ? `<button class="btn gefahr klein" data-act="${act}" data-id="${id}" type="button">Löschen</button>` : "";
+  [["#anForm","announce"],["#tmForm","events"],["#dkForm","docs"],["#bForm","reports"],["#aForm","accidents"]].forEach(([x,k]) => $(x).classList.toggle("hidden",!kann(k)));
+
+  // Ankündigungen
+  const anKarte = a => `<article class="bericht"><div class="kopf"><h3>${esc(a.title)}</h3>${loeschen("an-loeschen",a.id)}</div><div class="meta">${a.important?`<span class="tag schwer">Wichtig</span>`:""}${esc(a.authorName)} · ${fmtTs(a.createdAt)}</div><p>${esc(a.text)}</p></article>`;
+  $("#anListe").innerHTML = ankuend.map(anKarte).join("") || `<div class="leer">Noch keine Ankündigungen.</div>`;
+  $("#anStart").innerHTML = ankuend.slice(0,2).map(anKarte).join("") || `<div class="leer">Keine Ankündigungen.</div>`;
+
+  // Termine
+  const kommend = termine.filter(t => t.start >= jetzt).sort((a,b) => a.start.localeCompare(b.start));
+  const tmLed = t => { const h = (new Date(t.start) - Date.now()) / 36e5, [c,tt] = h < 0 ? ["aus","Vorbei"] : h < 24 ? ["gelb","Beginnt in den nächsten 24 Stunden"] : ["gruen","Geplant"]; return `<span class="led ${c}" title="${tt}"></span>`; };
+  const tmKarte = t => { const ab = abm.filter(a => a.eventId===t.id);
+    return `<article class="bericht"><div class="kopf"><h3>${esc(t.title)}</h3>${loeschen("tm-loeschen",t.id)}</div>
+    <div class="meta">${tmLed(t)}<span class="tag">${esc(t.type)}</span>${fmt(t.start)}${t.location?` · ${esc(t.location)}`:""}</div>
+    ${t.description?`<p>${esc(t.description)}</p>`:""}
+    ${adm ? (ab.length ? `<p><b>Abgemeldet:</b> ${ab.map(a => esc(a.userName)).join(", ")}</p>` : "") : (ab.length ? `<span class="tag mittel">Du bist abgemeldet</span>` : "")}</article>`; };
+  $("#tmKommend").innerHTML = kommend.map(tmKarte).join("") || `<div class="leer">Keine anstehenden Termine.</div>`;
+  $("#tmVorbei").innerHTML = termine.filter(t => t.start < jetzt).slice(0,20).map(tmKarte).join("") || `<div class="leer">Noch keine vergangenen Termine.</div>`;
+
+  // LED-Laufschrift und Hinweis-LED
+  const meldungen = ankuend.slice(0,3).map(a => (a.important ? "WICHTIG: " : "") + a.title);
+  if(kommend[0]) meldungen.push(`Nächster Termin: ${kommend[0].title}, ${fmt(kommend[0].start)}`);
+  if(darf("reports") && reports[0]) meldungen.push(`Letzter Einsatz: ${reports[0].number ? reports[0].number + " " : ""}${reports[0].type}, ${reports[0].location}`);
+  const ledTxt = meldungen.join("   +++   ") || "Keine aktuellen Meldungen";
+  if($("#ledText").textContent !== ledTxt){ $("#ledText").textContent = ledTxt; $("#ledText").style.setProperty("--dauer", Math.max(20, Math.round(ledTxt.length * .3)) + "s"); }
+  document.querySelector('#nav [data-view="ankuendigungen"]').classList.toggle("neu", ankuend.some(a => a.important && a.createdAt?.toMillis && Date.now() - a.createdAt.toMillis() < 7*864e5));
+
+  // Abmeldungen
+  $("#abSub").textContent = adm ? "Alle Abmeldungen der Mitglieder." : "Melde dich für Termine oder Zeiträume ab.";
+  const st = $("#abTermin"), alt = st.value;
+  st.innerHTML = `<option value="">Allgemein (nur Zeitraum)</option>` + kommend.map(t => `<option value="${t.id}">${esc(t.title)} · ${fmt(t.start)}</option>`).join("");
+  st.value = alt;
+  $("#abListe").innerHTML = abm.map(a => `<article class="bericht"><div class="kopf"><h3>${adm ? esc(a.userName) : esc(a.eventTitle || "Allgemeine Abmeldung")}</h3><button class="btn gefahr klein" data-act="ab-loeschen" data-id="${a.id}" type="button">${adm ? "Löschen" : "Zurückziehen"}</button></div>
+    <div class="meta">${adm && a.eventTitle ? `<span class="tag">${esc(a.eventTitle)}</span>` : ""}${fmtDatum(a.from)}${a.to!==a.from ? ` bis ${fmtDatum(a.to)}` : ""}</div><p>${esc(a.reason)}</p></article>`).join("") || `<div class="leer">Keine Abmeldungen.</div>`;
+
+  // Dokumente
+  const qd = $("#dkSuche").value.trim().toLowerCase(), offen = new Set([...document.querySelectorAll("#dkListe details[open]")].map(x => x.dataset.id));
+  $("#dkListe").innerHTML = ["Dienstanweisung","Funkcode","Absicherungsrichtlinie","Sonstiges"].map(k => {
+    const l = dokus.filter(d => (d.category||"Sonstiges")===k && (!qd || [d.title,d.category,d.text].join(" ").toLowerCase().includes(qd)));
+    return l.length ? `<h3 style="margin:1rem 0 .6rem">${k}</h3>` + l.map(d => `<details class="bericht" data-id="${d.id}"${qd || offen.has(d.id) ? " open" : ""}><summary>${esc(d.title)}</summary><p style="margin-top:.6rem">${esc(d.text)}</p>${adm ? `<div style="margin-top:.5rem">${loeschen("dk-loeschen",d.id)}</div>` : ""}</details>`).join("") : "";
+  }).join("") || `<div class="leer">${qd ? "Kein Dokument passt zu deiner Suche." : "Noch keine Dokumente."}</div>`;
+
+  // Statistik
+  if(view==="statistik"){
+    const bal = l => { const m = Math.max(1,...l.map(x => x[1])); return l.map(x => `<div class="bal"><span>${esc(x[0])}</span><div><i style="width:${Math.round(x[1]/m*100)}%${x[2]?`;background:${x[2]}`:""}"></i></div><b>${x[1]}</b></div>`).join("") || "<small>Keine Daten.</small>"; };
+    const jahr = String(new Date().getFullYear());
+    const dauern = reports.map(r => (new Date(r.endDate) - new Date(r.date)) / 60000).filter(x => x >= 0);
+    const avg = dauern.length ? Math.round(dauern.reduce((a,b) => a+b, 0) / dauern.length) : 0;
+    const z = [[reports.length,"Einsätze gesamt"],[reports.filter(r => (r.date||"").startsWith(jahr)).length,"Einsätze "+jahr],[avg ? `${Math.floor(avg/60)}h ${avg%60}m` : "–","Ø Einsatzdauer"]];
+    if(darf("accidents")) z.push([accidents.length,"Arbeitsunfälle"]);
+    $("#stZahlen").innerHTML = z.map(x => `<div class="zahl"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
+    const arten = {}; reports.forEach(r => { const k = r.type || "Sonstiges"; arten[k] = (arten[k]||0) + 1; });
+    $("#stArt").innerHTML = bal(Object.entries(arten).sort((a,b) => b[1]-a[1]).map(([k,v]) => [k,v,ART_FARBE[k]||"#6B7280"]));
+    const y = new Date().getFullYear(), m0 = new Date().getMonth(), monate = [];
+    for(let i=11;i>=0;i--){ const d = new Date(y,m0-i,1); monate.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")); }
+    $("#stMonat").innerHTML = bal(monate.map(m => [m.slice(5)+"/"+m.slice(2,4), reports.filter(r => (r.date||"").startsWith(m)).length]));
+    $("#stTop").innerHTML = bal(users.filter(u => u.active).map(u => [u.name, reports.filter(r => (r.crew||[]).some(c => c.uid===u.id)).length]).filter(x => x[1]).sort((a,b) => b[1]-a[1]).slice(0,10));
+  }
+}
+
+$("#dkSuche").oninput = renderAll;
+$("#bSuche").oninput = renderAll;
+$("#aSuche").oninput = renderAll;
+$("#pUser").onchange = () => {
+  const u = users.find(x => x.id === $("#pUser").value); if(!u) return;
+  const i = RAENGE.indexOf(u.rank);
+  $("#pRang").value = RAENGE[Math.min(i+1,RAENGE.length-1)];
+};
+
+/* ---------- Formulare ---------- */
+$("#bForm").onsubmit = async e => {
+  e.preventDefault(); $("#bMsg").textContent = "";
+  if($("#bEnde").value < $("#bDatum").value){$("#bMsg").textContent = "Das Einsatzende darf nicht vor dem Einsatzbeginn liegen.";return}
+  const crew = [...document.querySelectorAll("#bCrew input:checked")].map(i => ({uid:i.value, name:(users.find(x => x.id===i.value)||{}).name || ""}));
+  if(!crew.length){$("#bMsg").textContent = "Bitte mindestens ein beteiligtes Mitglied auswählen.";return}
+  try{
+    const jahr = $("#bDatum").value.slice(0,4), rRef = doc(collection(db,"reports")), cRef = doc(db,"counters","reports-"+jahr);
+    await runTransaction(db, async t => {
+    const n = ((await t.get(cRef)).data()?.n || 0) + 1;
+    t.set(cRef,{n});
+    t.set(rRef,{
+      number:`E-${jahr}-${String(n).padStart(4,"0")}`, title:$("#bTitel").value.trim(), type:$("#bArt").value, location:$("#bOrt").value.trim(),
+      date:$("#bDatum").value, endDate:$("#bEnde").value, crew, narrative:$("#bText").value.trim(),
+      authorUid:me.id, authorName:me.name, createdAt:serverTimestamp()
+    });
+    });
+    e.target.reset(); toast("Bericht gespeichert");
+  }catch(err){$("#bMsg").textContent = fehlertext(err)}
+};
+
+$("#aForm").onsubmit = async e => {
+  e.preventDefault(); $("#aMsg").textContent = "";
+  try{
+    await addDoc(collection(db,"accidents"),{
+      person:$("#aPerson").value.trim(), date:$("#aDatum").value, location:$("#aOrt").value.trim(),
+      type:$("#aArt").value, injury:$("#aVerletzung").value.trim(), severity:$("#aSchwere").value,
+      narrative:$("#aText").value.trim(), measures:$("#aMass").value.trim(),
+      authorUid:me.id, authorName:me.name, createdAt:serverTimestamp()
+    });
+    e.target.reset(); toast("Arbeitsunfall gespeichert");
+  }catch(err){$("#aMsg").textContent = fehlertext(err)}
+};
+
+$("#tSuche").oninput = renderAll;
+
+$("#lForm").onsubmit = async e => {
+  e.preventDefault(); $("#lMsg").textContent = "";
+  const name = $("#lName").value.trim();
+  if(courses.some(c => c.name.toLowerCase()===name.toLowerCase())){$("#lMsg").textContent = "Diesen Lehrgang gibt es schon.";return}
+  try{await addDoc(collection(db,"courses"),{name,description:$("#lBeschr").value.trim(),createdAt:serverTimestamp()}); e.target.reset(); toast("Lehrgang erstellt")}
+  catch(err){$("#lMsg").textContent = fehlertext(err)}
+};
+
+$("#lvForm").onsubmit = async e => {
+  e.preventDefault(); $("#lvMsg").textContent = "";
+  const u = users.find(x => x.id===$("#lvUser").value), c = courses.find(x => x.id===$("#lvKurs").value);
+  if(!u || !c){$("#lvMsg").textContent = "Bitte Mitglied und Lehrgang auswählen.";return}
+  if(awards.some(a => a.userUid===u.id && a.courseId===c.id)){$("#lvMsg").textContent = `${u.name} hat „${c.name}“ bereits.`;return}
+  try{
+    await addDoc(collection(db,"courseAwards"),{courseId:c.id,courseName:c.name,userUid:u.id,userName:u.name,date:$("#lvDatum").value,note:$("#lvNotiz").value.trim(),byName:me.name,createdAt:serverTimestamp()});
+    $("#lvNotiz").value = ""; toast("Lehrgang vergeben");
+  }catch(err){$("#lvMsg").textContent = fehlertext(err)}
+};
+
+$("#wForm").onsubmit = async e => {
+  e.preventDefault(); $("#wMsg").textContent = "";
+  const u = users.find(x => x.id===$("#wUser").value);
+  if(!u){$("#wMsg").textContent = "Bitte ein Mitglied auswählen.";return}
+  try{
+    await addDoc(collection(db,"warnings"),{userUid:u.id,userName:u.name,level:$("#wStufe").value,reason:$("#wGrund").value.trim(),details:$("#wText").value.trim(),byUid:me.id,byName:me.name,createdAt:serverTimestamp()});
+    $("#wGrund").value = ""; $("#wText").value = ""; toast("Verwarnung erteilt");
+  }catch(err){$("#wMsg").textContent = fehlertext(err)}
+};
+
+$("#tForm").onsubmit = async e => {
+  e.preventDefault(); $("#tMsg").textContent = "";
+  try{await updateDoc(doc(db,"users",me.id),{phone:$("#tNr").value.trim()}); toast("Telefonnummer gespeichert")}
+  catch(err){$("#tMsg").textContent = fehlertext(err)}
+};
+
+// Eigenes Passwort ändern (mit Bestätigung des aktuellen Passworts)
+$("#pwForm").onsubmit = async e => {
+  e.preventDefault(); const msg = $("#pwMsg"); msg.textContent = "";
+  const alt = $("#pwAlt").value, neu = $("#pwNeu").value;
+  if(neu !== $("#pwNeu2").value){msg.textContent = "Die neuen Passwörter stimmen nicht überein.";return}
+  if(neu === alt){msg.textContent = "Das neue Passwort muss sich vom aktuellen unterscheiden.";return}
+  try{
+    const user = auth.currentUser;
+    await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, alt));
+    await updatePassword(user, neu);
+    e.target.reset(); toast("Passwort geändert");
+  }catch(err){
+    msg.textContent = ["auth/invalid-credential","auth/wrong-password"].includes(err.code) ? "Das aktuelle Passwort stimmt nicht." : fehlertext(err);
+  }
+};
+
+// Passwort eines anderen Mitglieds setzen: läuft über den Server (Firebase Admin SDK)
+$("#apwForm").onsubmit = async e => {
+  e.preventDefault(); const msg = $("#apwMsg"); msg.textContent = "";
+  const u = users.find(x => x.id===profilId); if(!u) return;
+  try{
+    const token = await auth.currentUser.getIdToken();
+    const res = await fetch("/api/admin/passwort",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({uid:u.id,password:$("#apwNeu").value})});
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok) throw new Error(data.fehler || "Das hat nicht geklappt. Bitte versuche es nochmal.");
+    e.target.reset(); toast(`Passwort von ${u.name} geändert`);
+  }catch(err){msg.textContent = err.message || fehlertext(err)}
+};
+
+$("#nForm").onsubmit = async e => {
+  e.preventDefault(); $("#nMsg").textContent = "";
+  try{
+    const rl = alleRollen().find(r => r.name === $("#nRolle").value) || {name:"Mitglied",admin:false};
+    const c = await createUserWithEmailAndPassword(zweitAuth,zuMail($("#nUser").value),$("#nPw").value);
+    await setDoc(doc(db,"users",c.user.uid),{name:$("#nName").value.trim(),dienstnummer:$("#nDn").value.trim(),rank:$("#nRang").value,role:rl.admin?"admin":"member",canWarn:!!(rl.admin||rl.canWarn),funktion:rl.name,username:$("#nUser").value.trim().toLowerCase(),active:true,createdAt:serverTimestamp()});
+    await signOut(zweitAuth);
+    e.target.reset(); toast("Konto angelegt");
+  }catch(err){$("#nMsg").textContent = fehlertext(err)}
+};
+
+$("#pForm").onsubmit = async e => {
+  e.preventDefault(); $("#pMsg").textContent = "";
+  const u = users.find(x => x.id === $("#pUser").value), neu = $("#pRang").value;
+  if(!u){$("#pMsg").textContent="Bitte ein Mitglied auswählen.";return}
+  if(u.rank === neu){$("#pMsg").textContent=`${u.name} hat den Rang „${neu}“ bereits.`;return}
+  try{
+    const batch = writeBatch(db);
+    batch.update(doc(db,"users",u.id),{rank:neu});
+    batch.set(doc(collection(db,"promotions")),{userUid:u.id,userName:u.name,from:u.rank,to:neu,reason:$("#pGrund").value.trim(),byName:me.name,createdAt:serverTimestamp()});
+    await batch.commit();
+    $("#pGrund").value = ""; toast("Rang geändert");
+  }catch(err){$("#pMsg").textContent = fehlertext(err)}
+};
+
+document.addEventListener("click", e => { const c = e.target.closest("[data-art]"); if(!c) return; artFilter = c.dataset.art; renderAll(); });
+const loginAnsicht = a => { ["authForm","bewForm","bewDanke","statForm"].forEach(x => $("#"+x).classList.toggle("hidden", x!==a)); };
+let bwS = 0;
+function bwSchritt(n){ bwS = n;
+  document.querySelectorAll("#bewForm fieldset").forEach(f => f.classList.toggle("hidden", +f.dataset.s !== n));
+  document.querySelectorAll("#bwSchritte li").forEach((li,i) => { li.classList.toggle("an", i===n); li.classList.toggle("ok", i<n); });
+  $("#bwZur").classList.toggle("hidden", n===0); $("#bwWeiter").classList.toggle("hidden", n===2); $("#bwBtn").classList.toggle("hidden", n!==2); $("#bwMsg").textContent = "";
+}
+const bwGueltig = () => [...document.querySelectorAll(`#bewForm fieldset[data-s="${bwS}"] [required]`)].every(el => el.reportValidity());
+$("#bwWeiter").onclick = () => { if(bwGueltig()) bwSchritt(bwS+1); };
+$("#bwZur").onclick = () => bwSchritt(bwS-1);
+document.querySelectorAll("[data-zaehl]").forEach(z => { const i = $("#"+z.dataset.zaehl), u = () => z.textContent = `${i.value.length} / ${i.maxLength}`; i.addEventListener("input", u); u(); });
+$("#zuBewerbung").onclick = () => { bwSchritt(0); loginAnsicht("bewForm"); };
+$("#zuStatus").onclick = () => { $("#stErg").innerHTML = ""; $("#stMsg").textContent = ""; loginAnsicht("statForm"); };
+$("#zuLogin").onclick = $("#zuLogin2").onclick = $("#bwZurueck").onclick = () => loginAnsicht("authForm");
+const bwCode = () => { const z = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; return [...crypto.getRandomValues(new Uint8Array(8))].map(x => z[x % z.length]).join(""); };
+$("#bewForm").onsubmit = async e => {
+  e.preventDefault(); $("#bwMsg").textContent = "";
+  if(bwS < 2){ $("#bwWeiter").click(); return; }
+  if($("#bwFalle").value){ e.target.reset(); $("#bwCode").textContent = "–"; loginAnsicht("bewDanke"); return; } // Spam-Falle
+  if(!bwGueltig()) return;
+  const btn = $("#bwBtn"); btn.disabled = true; btn.textContent = "Wird gesendet …";
+  try{
+    const code = bwCode(), t = serverTimestamp(), w = writeBatch(db);
+    w.set(doc(db,"applications",code),{name:$("#bwName").value.trim(),contact:$("#bwKontakt").value.trim(),age:Number($("#bwAlter").value),bereich:$("#bwBereich").value,verfuegbar:$("#bwVerf").value,experience:$("#bwErf").value.trim(),motivation:$("#bwMot").value.trim(),regeln:true,code,status:"neu",createdAt:t});
+    w.set(doc(db,"applicationStatus",code),{status:"neu",reply:"",createdAt:t});
+    await w.commit();
+    e.target.reset(); $("#bwCode").textContent = code.slice(0,4) + "-" + code.slice(4); loginAnsicht("bewDanke");
+  }catch(err){console.error("Bewerbung:",err); $("#bwMsg").textContent = `Das hat nicht geklappt (Fehlercode: ${err.code || "unbekannt"}). Bitte versuche es nochmal.`}
+  finally{btn.disabled = false; btn.textContent = "Abschicken"}
+};
+$("#bwKopie").onclick = async () => { try{ await navigator.clipboard.writeText($("#bwCode").textContent); $("#bwKopie").textContent = "Kopiert ✓"; }catch(e){} };
+$("#statForm").onsubmit = async e => {
+  e.preventDefault(); const c = $("#stCode").value.toUpperCase().replace(/[^A-Z0-9]/g,""), erg = $("#stErg"); erg.innerHTML = ""; $("#stMsg").textContent = "";
+  if(c.length !== 8){ $("#stMsg").textContent = "Die Nummer hat 8 Zeichen (XXXX-XXXX)."; return; }
+  try{ const s = await getDoc(doc(db,"applicationStatus",c));
+    if(!s.exists()){ $("#stMsg").textContent = "Keine Bewerbung mit dieser Nummer gefunden."; return; }
+    const d = s.data(), st = BEW_ST[d.status] || BEW_ST.neu;
+    erg.innerHTML = `<div class="stat" style="--ac:${st[2]}"><b>${BEW_PUB[d.status] || "Eingegangen"}</b>${d.reply ? `<p>${esc(d.reply)}</p>` : ""}</div>`;
+  }catch(err){ $("#stMsg").textContent = "Abfrage fehlgeschlagen. Bitte versuche es später nochmal."; }
+};
+document.addEventListener("click", e => {
+  const c = e.target.closest("[data-bst]"); if(c){ bewFilter = c.dataset.bst; renderAll(); return; }
+  const s = e.target.closest("[data-bset]"); if(s) bewSpeichern(s.dataset.id, {status:s.dataset.bset});
+});
+document.addEventListener("change", e => { const t = e.target.closest(".bew-note,.bew-reply"); if(t) bewSpeichern(t.dataset.id, t.classList.contains("bew-note") ? {note:t.value.trim()} : {reply:t.value.trim()}); });
+$("#bwSuche").addEventListener("input", renderBew);
+const uhr = () => { const d = new Date(); $("#uhr").textContent = d.toLocaleDateString("de-AT",{weekday:"short",day:"2-digit",month:"2-digit"}) + "  " + d.toLocaleTimeString("de-AT"); };
+uhr(); setInterval(uhr, 1000);
+
+function formular(id,msg,col,daten,ok){
+  $(id).onsubmit = async e => {
+    e.preventDefault(); $(msg).textContent = "";
+    try{
+      const d = daten(); if(!d) return;
+      await addDoc(collection(db,col),{...d,authorUid:me.id,authorName:me.name,createdAt:serverTimestamp()});
+      e.target.reset(); toast(ok);
+    }catch(err){$(msg).textContent = fehlertext(err)}
+  };
+}
+formular("#anForm","#anMsg","announcements",() => ({title:$("#anTitel").value.trim(),text:$("#anText").value.trim(),important:$("#anWichtig").checked}),"Ankündigung veröffentlicht");
+formular("#tmForm","#tmMsg","events",() => ({title:$("#tmTitel").value.trim(),type:$("#tmArt").value,start:$("#tmStart").value,location:$("#tmOrt").value.trim(),description:$("#tmText").value.trim()}),"Termin angelegt");
+formular("#dkForm","#dkMsg","docs",() => ({title:$("#dkTitel").value.trim(),category:$("#dkKat").value,text:$("#dkText").value.trim()}),"Dokument gespeichert");
+formular("#abForm","#abMsg","absences",() => {
+  const v = $("#abVon").value, b = $("#abBis").value;
+  if(b < v){$("#abMsg").textContent = "Das Ende darf nicht vor dem Beginn liegen."; return null}
+  const t = termine.find(x => x.id===$("#abTermin").value);
+  return {userUid:me.id,userName:me.name,eventId:t?t.id:"",eventTitle:t?t.title:"",from:v,to:b,reason:$("#abGrund").value.trim()};
+},"Abmeldung gespeichert");
+$("#abTermin").onchange = () => { const t = termine.find(x => x.id===$("#abTermin").value); if(t) $("#abVon").value = $("#abBis").value = t.start.slice(0,10); };
+</script>
+</body>
+</html>
