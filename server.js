@@ -66,9 +66,29 @@ app.post("/api/admin/passwort", async (req, res) => {
 // Entweder FIREBASE_CONFIG = JSON mit apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId
 // oder einzeln: FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID, FIREBASE_STORAGE_BUCKET,
 // FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID.
+// Liest die Config tolerant: echtes JSON, aber auch das JavaScript-Format aus der Firebase-Konsole
+// (const firebaseConfig = { apiKey: "..." };), mit Smart-Quotes oder Base64.
+function configLesen(roh) {
+  let t = String(roh).trim();
+  if (!t.includes("{")) { try { t = Buffer.from(t, "base64").toString("utf8"); } catch (e) {} }
+  const a = t.indexOf("{"), b = t.lastIndexOf("}");
+  if (a < 0 || b < a) return null;
+  t = t.slice(a, b + 1)
+    .replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+  try { return JSON.parse(t); } catch (e) {}
+  try {
+    t = t.replace(/\/\/[^\n]*$/gm, "")                          // Zeilenkommentare
+         .replace(/'([^'\\]*)'/g, (m, x) => JSON.stringify(x))   // 'text' -> "text"
+         .replace(/([{,]\s*)([A-Za-z_$][\w$]*)\s*:/g, '$1"$2":') // Schlüssel in Anführungszeichen
+         .replace(/,\s*}/g, "}");                                 // Komma vor }
+    return JSON.parse(t);
+  } catch (e) { return null; }
+}
 function webConfig() {
   if (process.env.FIREBASE_CONFIG) {
-    try { return JSON.parse(process.env.FIREBASE_CONFIG); } catch (e) { console.warn("FIREBASE_CONFIG ist kein gültiges JSON."); }
+    const c = configLesen(process.env.FIREBASE_CONFIG);
+    if (c) return c;
+    console.warn("FIREBASE_CONFIG ist kein gültiges JSON. Anfang des Werts:", JSON.stringify(process.env.FIREBASE_CONFIG.slice(0, 20)));
   }
   const e = process.env;
   if (e.FIREBASE_API_KEY && e.FIREBASE_PROJECT_ID) {
