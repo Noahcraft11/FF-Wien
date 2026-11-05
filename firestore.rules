@@ -67,6 +67,15 @@ service cloud.firestore {
     match /events/{id}        { allow read: if aktiv(); allow create, update: if recht('events', false);   allow delete: if admin(); }
     match /docs/{id}          { allow read: if aktiv(); allow create, update: if recht('docs', false);     allow delete: if admin(); }
 
+    // Preisliste für den Preisrechner: alle lesen, Pflege mit dem Recht "prices"
+    match /services/{id} {
+      allow read: if aktiv();
+      allow create, update: if recht('prices', false)
+                            && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 80
+                            && request.resource.data.price is number && request.resource.data.price >= 0 && request.resource.data.price <= 1000000;
+      allow delete: if admin();
+    }
+
     match /absences/{id} {
       allow read: if admin() || (aktiv() && resource.data.userUid == request.auth.uid);
       allow create: if aktiv() && request.resource.data.userUid == request.auth.uid;
@@ -81,7 +90,7 @@ service cloud.firestore {
                     && request.resource.data.status == 'neu'
                     && request.resource.data.createdAt == request.time
                     && request.resource.data.regeln == true
-                    && request.resource.data.bereich in ['Streckendienst','Verkehrsmanagement','Egal']
+                    && request.resource.data.bereich in ['Werkstatt','Verwaltung','Egal']
                     && request.resource.data.verfuegbar in ['Täglich','Wochentags','Wochenende','Flexibel']
                     && request.resource.data.name is string && request.resource.data.name.size() > 1 && request.resource.data.name.size() <= 80
                     && request.resource.data.contact is string && request.resource.data.contact.size() > 2 && request.resource.data.contact.size() <= 100

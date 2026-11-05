@@ -1,22 +1,28 @@
-<<<<<<< HEAD
-# ASFINAG – Mitgliederportal
-=======
-# Feuerwehr Wien – Mitgliederportal
->>>>>>> 77e245b5127057057d78ba1b6d65ae0255ca4007
+# WerkstattNet – Mitgliederportal
 
-Login, Einsatzberichte, Beförderungen, Arbeitsunfälle, Lehrgänge, Verwarnungen, Telefonbuch,
-Mitgliederprofile und Verwaltung (Firebase Auth + Firestore).
+Desktop-Oberfläche mit Login und Apps (Firebase Auth + Firestore).
+Die klassische Ansicht liegt zusätzlich unter `/klassisch.html`.
 
-<<<<<<< HEAD
-1. **Neues** Firebase-Projekt für die ASFINAG anlegen (Authentication: E-Mail/Passwort aktivieren, Firestore erstellen) und die Web-App-Config in `public/index.html` eintragen (`firebaseConfig`).
-=======
-1. Firebase-Config in `public/index.html` eintragen (`firebaseConfig`).
->>>>>>> 77e245b5127057057d78ba1b6d65ae0255ca4007
+## Einrichten
+1. Firebase-Projekt anlegen: Authentication (E-Mail/Passwort aktivieren) und Firestore erstellen.
 2. Inhalt von `firestore.rules` in der Firestore-Konsole unter "Regeln" einfügen und veröffentlichen.
-3. Service-Account für das Zurücksetzen fremder Passwörter einrichten:
-   Firebase-Konsole → Projekteinstellungen → Dienstkonten → "Neuen privaten Schlüssel generieren".
-   - Lokal: Datei als `serviceAccountKey.json` neben `server.js` legen (steht in der `.gitignore`).
-   - Auf Render: Umgebungsvariable `FIREBASE_SERVICE_ACCOUNT` mit dem **kompletten JSON-Inhalt** anlegen.
-4. Lokal starten: `npm install && npm start` → http://localhost:3000
-5. Auf Render: Repo verbinden, `render.yaml` wird automatisch erkannt.
-6. Deine Render-Domain unter Firebase → Authentication → Einstellungen → Autorisierte Domains eintragen.
+3. Web-App in Firebase anlegen und deren Config als JSON kopieren.
+
+## Railway
+Variablen (Railway → Service → Variables):
+- `FIREBASE_CONFIG` = JSON der Web-App-Config (apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId)
+- `FIREBASE_SERVICE_ACCOUNT` = kompletter JSON-Inhalt des Service-Account-Schlüssels
+  (Firebase → Projekteinstellungen → Dienstkonten → "Neuen privaten Schlüssel generieren").
+  Nötig nur für "Passwort setzen (Admin)".
+
+Danach die Railway-Domain in Firebase → Authentication → Einstellungen → Autorisierte Domains eintragen.
+Start: `npm start` (Railway erkennt das automatisch).
+
+## Lokal
+`npm install && npm start` → http://localhost:3000
+Lokal kann statt der Variablen `FIREBASE_CONFIG` gesetzt werden, z. B.
+`FIREBASE_CONFIG='{"apiKey":"...","projectId":"..."}' npm start`.
+Optional `serviceAccountKey.json` neben `server.js` (steht in der `.gitignore`).
+
+## Hinweis
+Der Login hängt an den Benutzernamen intern `@asfinag.portal` an (in `public/index.html`, Funktion `zuMail`).

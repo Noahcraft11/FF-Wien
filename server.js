@@ -9,12 +9,21 @@ app.use(express.json({ limit: "10kb" }));
 // (kompletter JSON-Inhalt, empfohlen auf Render) oder lokal als serviceAccountKey.json.
 let adminBereit = false;
 try {
-  const roh = process.env.FIREBASE_SERVICE_ACCOUNT;
-  const key = roh ? JSON.parse(roh) : require("./serviceAccountKey.json");
+  // Der Schlüssel kommt aus einer Variable beim Hoster (Railway): der komplette Inhalt der JSON-Datei.
+  // Erlaubte Namen: FIREBASE_SERVICE_ACCOUNT, FIREBASE_KEY oder REF. Lokal geht weiterhin serviceAccountKey.json.
+  const roh = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_KEY || process.env.REF;
+  let key;
+  if (roh) {
+    const text = roh.trim().startsWith("{") ? roh : Buffer.from(roh, "base64").toString("utf8"); // auch Base64 möglich
+    key = JSON.parse(text);
+  } else {
+    key = require("./serviceAccountKey.json");
+  }
+  if (typeof key.private_key === "string") key.private_key = key.private_key.replace(/\\n/g, "\n");
   admin.initializeApp({ credential: admin.credential.cert(key) });
   adminBereit = true;
 } catch (e) {
-  console.warn("Firebase Admin nicht eingerichtet – Passwort-Änderung durch Admins ist deaktiviert.");
+  console.warn("Firebase Admin nicht eingerichtet – Passwort-Änderung durch Admins ist deaktiviert. Grund:", e.message);
 }
 
 // Admin setzt das Passwort eines anderen Mitglieds
@@ -51,6 +60,35 @@ app.post("/api/admin/passwort", async (req, res) => {
     console.error(e);
     res.status(500).json({ fehler: "Das hat nicht geklappt. Bitte versuche es nochmal." });
   }
+});
+
+// Web-Config für die Seite (nicht geheim, kommt aber aus Variablen beim Hoster statt aus der index.html).
+// Entweder FIREBASE_CONFIG = JSON mit apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId
+// oder einzeln: FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID, FIREBASE_STORAGE_BUCKET,
+// FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID.
+function webConfig() {
+  if (process.env.FIREBASE_CONFIG) {
+    try { return JSON.parse(process.env.FIREBASE_CONFIG); } catch (e) { console.warn("FIREBASE_CONFIG ist kein gültiges JSON."); }
+  }
+  const e = process.env;
+  if (e.FIREBASE_API_KEY && e.FIREBASE_PROJECT_ID) {
+    return {
+      apiKey: e.FIREBASE_API_KEY,
+      authDomain: e.FIREBASE_AUTH_DOMAIN || `${e.FIREBASE_PROJECT_ID}.firebaseapp.com`,
+      projectId: e.FIREBASE_PROJECT_ID,
+      storageBucket: e.FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: e.FIREBASE_MESSAGING_SENDER_ID,
+      appId: e.FIREBASE_APP_ID,
+    };
+  }
+  // Kein Fallback mehr: Die Config kommt ausschließlich aus den Railway-Variablen.
+  return null;
+}
+app.get("/api/firebase-config", (req, res) => {
+  const cfg = webConfig();
+  res.set("Cache-Control", "no-store");
+  if (!cfg || !cfg.apiKey || !cfg.projectId) return res.status(503).json({ fehler: "Firebase-Config fehlt auf dem Server." });
+  res.json(cfg);
 });
 
 app.use(express.static(path.join(__dirname, "public")));
